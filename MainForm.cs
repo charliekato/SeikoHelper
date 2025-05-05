@@ -25,5 +25,12 @@ namespace SeikoHelper
                 Cursor.Current = previousCursor;
             }
         }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+            MainMenu mainMenu = new(GlobalV.EventName);
+            mainMenu.Show();
+        }
     }
 }
