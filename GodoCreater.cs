@@ -711,6 +711,20 @@ namespace SeikoHelper
 
                 }
         */
+        static void SetKumiToProgram(int prgNo, int kumi, SqlConnection myCon)
+        {
+            string setQuery = @"UPDATE プログラム SET 組数=@kumi WHERE 大会番号=@eventNo AND 競技番号=@uid ";
+            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+
+            using (SqlCommand myCommand = new(setQuery, myCon))
+            {
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
+                myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
+                myCommand.ExecuteNonQuery();
+            }
+
+        }
         static void DeleteRace(int prgNo, int kumi, SqlConnection myCon)
         {
             string delQuery = @"DELETE FROM 記録 WHERE 大会番号=@eventNo AND 競技番号=@uid AND 組=@kumi";
@@ -730,7 +744,10 @@ namespace SeikoHelper
                 DecrementKumiNo(prgNo, kumi, myCon);
                 kumi++;
             }
+            kumi = kumi - 2;
+            SetKumiToProgram(prgNo, kumi, myCon);
         }
+
         static void DeleteLap(int prgNo, int kumi, SqlConnection myCon)
         {
             string delQuery = @"DELETE FROM ラップ WHERE 大会番号=@eventNo AND 競技番号=@uid AND 組=@kumi";
@@ -745,7 +762,7 @@ namespace SeikoHelper
             }
 
             kumi++;
-            while (RaceExist(prgNo, kumi, myCon))
+            while (LapExist(prgNo, kumi, myCon))
             {
                 DecrementKumiNo4Lap(prgNo, kumi, myCon);
                 kumi++;
@@ -755,7 +772,6 @@ namespace SeikoHelper
         static void DecrementKumiNo4Lap(int prgNo, int kumi, SqlConnection myCon)
         {
             string Query = @"UPDATE ラップ SET 組=@newKumi WHERE 大会番号=@eventNo AND
-
                        競技番号=@uid AND 組=@kumi";
 
             int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
@@ -783,6 +799,24 @@ namespace SeikoHelper
                 myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
                 myCommand.Parameters.Add("@newKumi", SqlDbType.Int).Value = kumi - 1;
                 myCommand.ExecuteNonQuery();
+            }
+        }
+
+        static bool LapExist(int prgNo, int kumi, SqlConnection myCon)
+        {
+            string Query = @"SELECT 1 FROM ラップ WHERE 大会番号=@eventNo AND 競技番号=@uid AND 組=@kumi";
+
+            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+            using (SqlCommand myCommand = new(Query, myCon))
+            {
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
+                myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
+
+                using (SqlDataReader reader = myCommand.ExecuteReader())
+                {
+                    return reader.Read();
+                }
             }
         }
 
@@ -903,7 +937,7 @@ namespace SeikoHelper
                     }
                 }
                 DeleteRace(prgNo, kumi, myCon);
-//                DeleteLap(prgNo, kumi, myCon);
+                DeleteLap(prgNo, kumi, myCon);
             }   
         }
 

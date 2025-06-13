@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SeikoHelper")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e607c57ce6a211d7fb52a26808c9011ef48fd20d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cebe3833ba89203bf4002aee94be974cd499d312")]
 [assembly: System.Reflection.AssemblyProductAttribute("SeikoHelper")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SeikoHelper")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

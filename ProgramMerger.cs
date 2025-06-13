@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using Microsoft.Data.SqlClient;
+using SeikoHelper;
 
 namespace SeikoHelper
 {
@@ -189,25 +190,51 @@ namespace SeikoHelper
 
                 CreateNewRecordTable(conn, eventNo);
                 CreateNewLapTable(conn, eventNo);
+                MoveTable(conn,"プログラム",eventNo);
+                MoveTable(conn,"記録",eventNo);
+                MoveTable(conn,"ラップ",eventNo);
 
-                string deleteQuery = @"
-                     DELETE from プログラム where 大会番号=@大会番号";
-
-                using (SqlCommand deleteCmd = new SqlCommand(deleteQuery, conn))
-                {
-                    deleteCmd.Parameters.AddWithValue("@大会番号", eventNo);
-                    deleteCmd.ExecuteNonQuery();
-                }
-                string moveQuery = @"
-                     UPDATE プログラム set 大会番号=@大会番号 where 大会番号=@temp大会番号";
-
-                using (SqlCommand moveCmd = new SqlCommand(moveQuery, conn))
-                {
-                    moveCmd.Parameters.AddWithValue("@大会番号", eventNo);
-                    moveCmd.Parameters.AddWithValue("@temp大会番号", 1000);
-                    moveCmd.ExecuteNonQuery();
-                }
             }
+        }
+        private static void MoveTable(SqlConnection conn, string tableName, int eventNo)
+        {
+            string deleteQuery = $" DELETE from {tableName} where 大会番号=@大会番号";
+
+            using (SqlCommand deleteCmd = new SqlCommand(deleteQuery, conn))
+            {
+                deleteCmd.Parameters.AddWithValue("@大会番号", eventNo);
+                deleteCmd.ExecuteNonQuery();
+            }
+            string moveQuery = $" UPDATE {tableName} set 大会番号=@大会番号 where 大会番号=@temp大会番号";
+
+            using (SqlCommand moveCmd = new SqlCommand(moveQuery, conn))
+            {
+                moveCmd.Parameters.AddWithValue("@大会番号", eventNo);
+                moveCmd.Parameters.AddWithValue("@temp大会番号", 1000);
+                moveCmd.ExecuteNonQuery();
+            }
+
+        }
+        private static void MoveResult(SqlConnection conn, int eventNo)
+        {
+            string deleteQuery = @"
+                 DELETE from 記録 where 大会番号=@大会番号";
+
+            using (SqlCommand deleteCmd = new SqlCommand(deleteQuery, conn))
+            {
+                deleteCmd.Parameters.AddWithValue("@大会番号", eventNo);
+                deleteCmd.ExecuteNonQuery();
+            }
+            string moveQuery = @"
+                 UPDATE プログラム set 大会番号=@大会番号 where 大会番号=@temp大会番号";
+
+            using (SqlCommand moveCmd = new SqlCommand(moveQuery, conn))
+            {
+                moveCmd.Parameters.AddWithValue("@大会番号", eventNo);
+                moveCmd.Parameters.AddWithValue("@temp大会番号", 1000);
+                moveCmd.ExecuteNonQuery();
+            }
+
         }
 
         private static void CreateNewProgramTable(SqlConnection conn, int eventNo)

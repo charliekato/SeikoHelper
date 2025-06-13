@@ -1,5 +1,6 @@
 ﻿namespace SeikoHelper
 {
+
     partial class SelectServer
     {
         /// <summary>

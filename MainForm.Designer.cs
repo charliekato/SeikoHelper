@@ -29,11 +29,9 @@
         private void InitializeComponent()
         {
             labelMenu = new Label();
-            labelEntryList2 = new Label();
-            textBoxEntryList = new TextBox();
             labelEntryList = new Label();
-            buttonEntryList = new Button();
-            label1 = new Label();
+            lblGoDoCreater = new Label();
+            lblExtractNewRecord = new Label();
             SuspendLayout();
             // 
             // labelMenu
@@ -46,67 +44,47 @@
             labelMenu.TabIndex = 0;
             labelMenu.Text = "Menu";
             // 
-            // labelEntryList2
-            // 
-            labelEntryList2.AutoSize = true;
-            labelEntryList2.Font = new Font("Yu Gothic UI", 12F);
-            labelEntryList2.Location = new Point(100, 203);
-            labelEntryList2.Name = "labelEntryList2";
-            labelEntryList2.Size = new Size(182, 28);
-            labelEntryList2.TabIndex = 2;
-            labelEntryList2.Text = "出力 Excel ファイル名";
-            // 
-            // textBoxEntryList
-            // 
-            textBoxEntryList.Font = new Font("Yu Gothic UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            textBoxEntryList.Location = new Point(311, 200);
-            textBoxEntryList.Name = "textBoxEntryList";
-            textBoxEntryList.Size = new Size(206, 34);
-            textBoxEntryList.TabIndex = 3;
-            textBoxEntryList.Text = "EntryList.xlsx";
-            // 
             // labelEntryList
             // 
             labelEntryList.AutoSize = true;
             labelEntryList.Font = new Font("Yu Gothic UI", 12F);
-            labelEntryList.Location = new Point(82, 164);
+            labelEntryList.Location = new Point(82, 152);
             labelEntryList.Name = "labelEntryList";
             labelEntryList.Size = new Size(166, 28);
             labelEntryList.TabIndex = 4;
             labelEntryList.Text = "エントリーリスト作成";
+            labelEntryList.Click += labelEntryList_Click;
             // 
-            // buttonEntryList
+            // lblGoDoCreater
             // 
-            buttonEntryList.Font = new Font("Yu Gothic UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            buttonEntryList.Location = new Point(590, 188);
-            buttonEntryList.Name = "buttonEntryList";
-            buttonEntryList.Size = new Size(77, 46);
-            buttonEntryList.TabIndex = 5;
-            buttonEntryList.Text = "実行";
-            buttonEntryList.UseVisualStyleBackColor = true;
-            buttonEntryList.Click += buttonEntryList_Click;
+            lblGoDoCreater.AutoSize = true;
+            lblGoDoCreater.Font = new Font("Yu Gothic UI", 12F);
+            lblGoDoCreater.Location = new Point(82, 76);
+            lblGoDoCreater.Name = "lblGoDoCreater";
+            lblGoDoCreater.Size = new Size(137, 28);
+            lblGoDoCreater.TabIndex = 6;
+            lblGoDoCreater.Text = "合同クリエーター";
+            lblGoDoCreater.Click += GodoCreaterClick;
             // 
-            // label1
+            // lblExtractNewRecord
             // 
-            label1.AutoSize = true;
-            label1.Font = new Font("Yu Gothic UI", 12F);
-            label1.Location = new Point(82, 76);
-            label1.Name = "label1";
-            label1.Size = new Size(137, 28);
-            label1.TabIndex = 6;
-            label1.Text = "合同クリエーター";
-            label1.Click += label1_Click;
+            lblExtractNewRecord.AutoSize = true;
+            lblExtractNewRecord.Font = new Font("Yu Gothic UI", 12F);
+            lblExtractNewRecord.Location = new Point(82, 299);
+            lblExtractNewRecord.Name = "lblExtractNewRecord";
+            lblExtractNewRecord.Size = new Size(112, 28);
+            lblExtractNewRecord.TabIndex = 7;
+            lblExtractNewRecord.Text = "新記録抽出";
+            lblExtractNewRecord.Click += lblExtractNewRecord_Click;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(label1);
-            Controls.Add(buttonEntryList);
+            Controls.Add(lblExtractNewRecord);
+            Controls.Add(lblGoDoCreater);
             Controls.Add(labelEntryList);
-            Controls.Add(textBoxEntryList);
-            Controls.Add(labelEntryList2);
             Controls.Add(labelMenu);
             Name = "MainForm";
             Text = "MainMenu";
@@ -117,10 +95,8 @@
         #endregion
 
         private Label labelMenu;
-        private Label labelEntryList2;
-        private TextBox textBoxEntryList;
         private Label labelEntryList;
-        private Button buttonEntryList;
-        private Label label1;
+        private Label lblGoDoCreater;
+        private Label lblExtractNewRecord;
     }
 }
