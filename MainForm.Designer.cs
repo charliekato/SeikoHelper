@@ -32,6 +32,9 @@
             labelEntryList = new Label();
             lblGoDoCreater = new Label();
             lblExtractNewRecord = new Label();
+            lblSCLASS = new Label();
+            rdbYokoMochi = new RadioButton();
+            rdbTateMochi = new RadioButton();
             SuspendLayout();
             // 
             // labelMenu
@@ -70,18 +73,54 @@
             // 
             lblExtractNewRecord.AutoSize = true;
             lblExtractNewRecord.Font = new Font("Yu Gothic UI", 12F);
-            lblExtractNewRecord.Location = new Point(82, 299);
+            lblExtractNewRecord.Location = new Point(82, 236);
             lblExtractNewRecord.Name = "lblExtractNewRecord";
             lblExtractNewRecord.Size = new Size(112, 28);
             lblExtractNewRecord.TabIndex = 7;
             lblExtractNewRecord.Text = "新記録抽出";
             lblExtractNewRecord.Click += lblExtractNewRecord_Click;
             // 
+            // lblSCLASS
+            // 
+            lblSCLASS.AutoSize = true;
+            lblSCLASS.Font = new Font("Yu Gothic UI", 12F);
+            lblSCLASS.Location = new Point(82, 310);
+            lblSCLASS.Name = "lblSCLASS";
+            lblSCLASS.Size = new Size(216, 28);
+            lblSCLASS.TabIndex = 8;
+            lblSCLASS.Text = "標準記録判定クラス追加";
+            lblSCLASS.Click += lblSCLASS_Click;
+            // 
+            // rdbYokoMochi
+            // 
+            rdbYokoMochi.AutoSize = true;
+            rdbYokoMochi.Location = new Point(168, 191);
+            rdbYokoMochi.Name = "rdbYokoMochi";
+            rdbYokoMochi.Size = new Size(71, 24);
+            rdbYokoMochi.TabIndex = 9;
+            rdbYokoMochi.TabStop = true;
+            rdbYokoMochi.Text = "横持ち";
+            rdbYokoMochi.UseVisualStyleBackColor = true;
+            // 
+            // rdbTateMochi
+            // 
+            rdbTateMochi.AutoSize = true;
+            rdbTateMochi.Location = new Point(299, 190);
+            rdbTateMochi.Name = "rdbTateMochi";
+            rdbTateMochi.Size = new Size(71, 24);
+            rdbTateMochi.TabIndex = 10;
+            rdbTateMochi.TabStop = true;
+            rdbTateMochi.Text = "縦持ち";
+            rdbTateMochi.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(rdbTateMochi);
+            Controls.Add(rdbYokoMochi);
+            Controls.Add(lblSCLASS);
             Controls.Add(lblExtractNewRecord);
             Controls.Add(lblGoDoCreater);
             Controls.Add(labelEntryList);
@@ -98,5 +137,8 @@
         private Label labelEntryList;
         private Label lblGoDoCreater;
         private Label lblExtractNewRecord;
+        private Label lblSCLASS;
+        private RadioButton rdbYokoMochi;
+        private RadioButton rdbTateMochi;
     }
 }

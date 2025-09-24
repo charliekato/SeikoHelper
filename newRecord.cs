@@ -156,6 +156,7 @@ namespace SeikoHelper
                              rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位
                        FROM 記録
                         WHERE 記録.事由表示 = 0 and 選手番号>0 and 記録.大会番号=@eventNo
+                                 and 記録.水路<11
                     )
                     SELECT 
                         プログラム.表示用競技番号,

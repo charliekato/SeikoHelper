@@ -26,6 +26,7 @@ namespace SeikoHelper
         private void labelEntryList_Click(object sender, EventArgs e)
         {
             Cursor previousCursor = Cursor.Current;
+            if (rdbTateMochi.Checked ) { EntryList.tateFlag=true; }
 
             try
             {
@@ -49,6 +50,11 @@ namespace SeikoHelper
                 Cursor.Current = previousCursor;
             }
 
+        }
+
+        private void lblSCLASS_Click(object sender, EventArgs e)
+        {
+            RecordUpdater.GoUpdate();
         }
     }
 }

@@ -20,6 +20,7 @@
             base.Dispose(disposing);
         }
 
+
         #region Windows Form Designer generated code
 
         /// <summary>
@@ -40,6 +41,8 @@
             checkBoxScenario4 = new CheckBox();
             labelTitle = new Label();
             checkBoxScenario5 = new CheckBox();
+            label2 = new Label();
+            label3 = new Label();
             SuspendLayout();
             // 
             // checkBoxScenario1
@@ -162,11 +165,31 @@
             checkBoxScenario5.Text = "同じレーン順でクラス無差別にしてしまう";
             checkBoxScenario5.UseVisualStyleBackColor = true;
             // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(295, 251);
+            label2.Name = "label2";
+            label2.Size = new Size(140, 20);
+            label2.TabIndex = 13;
+            label2.Text = "ここから下は使用不可";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(531, 251);
+            label3.Name = "label3";
+            label3.Size = new Size(140, 20);
+            label3.TabIndex = 14;
+            label3.Text = "ここから下は使用不可";
+            // 
             // MainMenu
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(931, 563);
+            Controls.Add(label3);
+            Controls.Add(label2);
             Controls.Add(checkBoxScenario5);
             Controls.Add(labelTitle);
             Controls.Add(checkBoxScenario4);
@@ -200,5 +223,7 @@
         private Label label1;
         private Label labelTitle;
         private CheckBox checkBoxScenario5;
+        private Label label2;
+        private Label label3;
     }
 }
