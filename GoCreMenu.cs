@@ -16,17 +16,8 @@ namespace SeikoHelper
         {
             InitializeComponent();
             this.Text = title;
-            this.Paint += DrawLine;
         }
 
-        private void DrawLine(object sender, PaintEventArgs e)
-        {
-            using (Pen pen = new Pen(Color.Black, 2)) // 青色・太さ3px
-            {
-                e.Graphics.DrawLine(pen, 50, 260, 860, 260);
-                // (50,50) → (300,200) に直線
-            }
-        }
 
         private void checkBoxScenario3_CheckedChanged(object sender, EventArgs e)
         {
