@@ -26,7 +26,7 @@ namespace SeikoHelper
         private void labelEntryList_Click(object sender, EventArgs e)
         {
             Cursor previousCursor = Cursor.Current;
-            if (rdbTateMochi.Checked ) { EntryList.tateFlag=true; }
+            if (rdbTateMochi.Checked) { EntryList.tateFlag = true; }
 
             try
             {
@@ -55,6 +55,34 @@ namespace SeikoHelper
         private void lblSCLASS_Click(object sender, EventArgs e)
         {
             RecordUpdater.GoUpdate();
+        }
+
+        private void labelWinnerList_Click(object sender, EventArgs e)
+        {
+            Cursor previousCursor = Cursor.Current;
+
+            try
+            {
+                // 処理中カーソル（WaitCursor）を設定
+                SaveFileDialog sfd = new SaveFileDialog();
+                sfd.Title = "保存先のファイルを選択してください";
+                sfd.Filter = "エクセルファイル (*.xlsx)|*.xlsx|すべてのファイル (*.*)|*.*";
+                sfd.DefaultExt = "xlsx";
+
+                Cursor.Current = Cursors.WaitCursor;
+                //EntryList.CreateEntryList(textBoxEntryList.Text);
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = sfd.FileName;
+                    WinnerList.ReadResult(GlobalV.ServerName, GlobalV.EventNo,filePath);
+                }
+            }
+            finally
+            {
+                // カーソルを元に戻す
+                Cursor.Current = previousCursor;
+            }
+
         }
     }
 }

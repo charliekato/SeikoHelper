@@ -1,5 +1,7 @@
-bin
-obj
+bin/
+obj/
 .vs
-Setup
+*.user
+*.suo
 UpgradeLog.htm
+Setup/Debug/

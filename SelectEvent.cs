@@ -117,9 +117,14 @@ namespace SeikoHelper
             var selectedItem = listEvent.SelectedItem;
             if (selectedItem != null)
             {
-                GlobalV.EventNo = Int32.Parse(selectedItem.ToString().Substring(0, 3));
+                string title = selectedItem.ToString();
+                string[] parts = selectedItem.ToString().Split('|');
+                GlobalV.EventNo = Int32.Parse(parts[0]);
                 MainForm mainForm = new MainForm();
-                mainForm.Text = selectedItem.ToString();
+                GlobalV.EventName = parts[1];
+                WinnerList.EventVenue= parts[2];
+                WinnerList.EventDate = parts[3];
+                mainForm.Text = title;
                 mainForm.Show();
                 //this.Hide();
 

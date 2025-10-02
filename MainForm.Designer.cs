@@ -35,6 +35,7 @@
             lblSCLASS = new Label();
             rdbYokoMochi = new RadioButton();
             rdbTateMochi = new RadioButton();
+            labelWinnerList = new Label();
             SuspendLayout();
             // 
             // labelMenu
@@ -73,7 +74,7 @@
             // 
             lblExtractNewRecord.AutoSize = true;
             lblExtractNewRecord.Font = new Font("Yu Gothic UI", 12F);
-            lblExtractNewRecord.Location = new Point(82, 236);
+            lblExtractNewRecord.Location = new Point(82, 318);
             lblExtractNewRecord.Name = "lblExtractNewRecord";
             lblExtractNewRecord.Size = new Size(112, 28);
             lblExtractNewRecord.TabIndex = 7;
@@ -84,7 +85,7 @@
             // 
             lblSCLASS.AutoSize = true;
             lblSCLASS.Font = new Font("Yu Gothic UI", 12F);
-            lblSCLASS.Location = new Point(82, 310);
+            lblSCLASS.Location = new Point(82, 392);
             lblSCLASS.Name = "lblSCLASS";
             lblSCLASS.Size = new Size(216, 28);
             lblSCLASS.TabIndex = 8;
@@ -113,11 +114,23 @@
             rdbTateMochi.Text = "縦持ち";
             rdbTateMochi.UseVisualStyleBackColor = true;
             // 
+            // labelWinnerList
+            // 
+            labelWinnerList.AutoSize = true;
+            labelWinnerList.Font = new Font("Yu Gothic UI", 12F);
+            labelWinnerList.Location = new Point(82, 249);
+            labelWinnerList.Name = "labelWinnerList";
+            labelWinnerList.Size = new Size(155, 28);
+            labelWinnerList.TabIndex = 11;
+            labelWinnerList.Text = "優勝者リスト作成";
+            labelWinnerList.Click += labelWinnerList_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(812, 528);
+            Controls.Add(labelWinnerList);
             Controls.Add(rdbTateMochi);
             Controls.Add(rdbYokoMochi);
             Controls.Add(lblSCLASS);
@@ -140,5 +153,6 @@
         private Label lblSCLASS;
         private RadioButton rdbYokoMochi;
         private RadioButton rdbTateMochi;
+        private Label labelWinnerList;
     }
 }

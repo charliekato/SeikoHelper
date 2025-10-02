@@ -8,6 +8,7 @@
         public static bool Strategy1 = false; // 男女の合同を許す
         public static bool Strategy2 = false; //組単位の合同を許す
         public static string EventName = string.Empty;
+
         public static int MaxLaneNo4Yosen = 10;
         public static int MaxLaneNo4Final = 10;
         public static int MaxLaneNo4TimeFinal = 10;
