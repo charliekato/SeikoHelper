@@ -118,7 +118,7 @@ namespace SeikoHelper
             return (string)value;
         }
 
-        private static bool ClassExist()
+        public static bool ClassExist()
         {
             string myQuery = "select 1 from クラス where 大会番号 = @eventNo";
             using (SqlConnection conn = new SqlConnection(GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord))

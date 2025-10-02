@@ -24,10 +24,21 @@ namespace SeikoHelper
             string query = $@"
     with myresult as (
         SELECT 
-            rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位,
-            プログラム.性別コード as 性別コード,
-            記録.新記録判定クラス,
-            プログラム.距離コード,
+            rank() over (partition by 記録.競技番号";
+            
+            if ( NewRecordExporter.ClassExist())
+            {
+                query +=  ", 記録.新記録判定クラス";
+            }
+            query = query + $@"  ORDER BY 記録.ゴール ASC) AS 順位,
+            プログラム.性別コード as 性別コード, ";
+            if (NewRecordExporter.ClassExist())
+            {
+                query +=  " 記録.新記録判定クラス, ";
+            }
+
+            query = query + $@"
+                       プログラム.距離コード,
             プログラム.種目コード,
             記録.ゴール,
             記録.新記録印刷マーク,
@@ -48,8 +59,12 @@ namespace SeikoHelper
 
         SELECT
             rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位,
-            プログラム.性別コード as 性別コード,
-            記録.新記録判定クラス,
+            プログラム.性別コード as 性別コード,";
+            if (NewRecordExporter.ClassExist())
+            {
+                query +=  "記録.新記録判定クラス,";
+            }
+            query +=  $@"
             プログラム.距離コード,
             プログラム.種目コード,
             記録.ゴール,
@@ -80,8 +95,12 @@ namespace SeikoHelper
           and 記録.ゴール <> ''
           and (プログラム.予決コード = 6 or プログラム.予決コード = 3)
     )
-    select 
-        クラス.クラス名称,
+    select ";
+            if (NewRecordExporter.ClassExist())
+            {
+                query +=  " クラス.クラス名称,";
+            }
+            query += $@"
         case myresult.性別コード
             when 1 then '男子'
             when 2 then '女子'
@@ -94,14 +113,25 @@ namespace SeikoHelper
         myresult.氏名,
         myresult.所属,
         myresult.新記録印刷マーク
-    from myresult
-        inner join クラス on クラス.クラス番号 = myresult.新記録判定クラス
+    from myresult";
+            if (NewRecordExporter.ClassExist())
+            {
+                query += "   inner join クラス on クラス.クラス番号 = myresult.新記録判定クラス";
+            }
+            query += $@"
         inner join 距離 on 距離.距離コード = myresult.距離コード
         inner join 種目 on 種目.種目コード = myresult.種目コード
-    where myresult.順位 = 1
-      and クラス.大会番号 = {eventNo}
-    order by クラス.クラス番号, 性別, myresult.種目コード, myresult.距離コード;
-    ";
+    where myresult.順位 = 1 ";
+            if (NewRecordExporter.ClassExist())
+            {
+                query += $"  and クラス.大会番号 = {eventNo}";
+
+            }
+            query += " order by ";
+            if (NewRecordExporter.ClassExist()) {
+                query += "クラス.クラス番号, ";
+            }
+            query+= " 性別, myresult.種目コード, myresult.距離コード; ";
 
             using (var con = new SqlConnection(connectionString))
             using (var cmd = new SqlCommand(query, con))
@@ -123,12 +153,15 @@ namespace SeikoHelper
                     int row = 3;
                     foreach (DataRow dr in dt.Rows)
                     {
-                        if (className != (string)dr["クラス名称"])
+                        if (NewRecordExporter.ClassExist())
                         {
-                            className = (string)dr["クラス名称"];
-                            ws.Cell(row, 1).Value = className;
-                            gender = "";
-                            row++;
+                            if (className != (string)dr["クラス名称"])
+                            {
+                                className = (string)dr["クラス名称"];
+                                ws.Cell(row, 1).Value = className;
+                                gender = "";
+                                row++;
+                            }
                         }
                         if (gender != (string)dr["性別"])
                         {
