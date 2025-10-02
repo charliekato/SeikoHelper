@@ -49,10 +49,11 @@ namespace SeikoHelper
                 }
             }
         }
-        private static void UpdateGameRecord(int genderCode, int classNo, int distanceCode, int strokeCode, string GR)
+        private static void UpdateGameRecord(int genderCode, int classNo, int distanceCode, int strokeCode, string GR, string swimmer, string shozoku)
         {
             string myQuery = @" 
-                      update 新記録 set 記録=@GR where 大会番号=@eventNo
+                update 新記録 set 記録=@GR , 記録保持者=@Name, 所属=@Shozoku, 日付=@Date, 会場=@Venue
+                       where 大会番号=@eventNo
                        and 性別コード=@gender
                        and 記録区分番号=@classNo
                        and 記録名称番号=1 
@@ -71,6 +72,10 @@ namespace SeikoHelper
                     command.Parameters.Add("@distanceCode", SqlDbType.Int).Value = distanceCode;
                     command.Parameters.Add("@classNo", SqlDbType.Int).Value = classNo;
                     command.Parameters.Add("@GR", SqlDbType.NVarChar).Value = GR;
+                    command.Parameters.Add("@Name", SqlDbType.NVarChar).Value=swimmer; ;
+                    command.Parameters.Add("@shozoku", SqlDbType.NVarChar).Value=shozoku; ;
+                    command.Parameters.Add("@Date", SqlDbType.NVarChar).Value = WinnerList.EventDate.Trim();
+                    command.Parameters.Add("@Venue",SqlDbType.NVarChar).Value=WinnerList.EventVenue;
                     command.ExecuteNonQuery();
                 }
             }
@@ -144,59 +149,111 @@ namespace SeikoHelper
         }
         public static void UpdateGameRecord()
         {
-            string mySql;
             bool classExist = ClassExist();
-            if (classExist) {
-                mySql= @"
-                WITH 最速記録 AS (
-                        SELECT 
-                            記録.競技番号,
-                            記録.ゴール, 
-                            記録.新記録判定クラス,
-                             rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位
-                       FROM 記録
-                        WHERE 記録.事由表示 = 0 and 選手番号>0 and 記録.大会番号=@eventNo
-                                 and 記録.水路<11
-                    )
-                    SELECT 
-                        プログラム.表示用競技番号,
-                        最速記録.新記録判定クラス,
-                        プログラム.性別コード ,
-                        プログラム.距離コード, 
-                        プログラム.種目コード,
-                        最速記録.ゴール as 記録
-                    FROM プログラム
-                    INNER JOIN 最速記録 ON 最速記録.競技番号 = プログラム.競技番号 AND 最速記録.順位 = 1
-                    WHERE プログラム.大会番号 = @eventNo
-                    ORDER BY プログラム.表示用競技番号;";
+                string query = $@"
+    with myresult as (
+        SELECT 
+            rank() over (partition by 記録.競技番号";
 
-            } else
-            {
-                 mySql= @"
-                    WITH 最速記録 AS (
-                        SELECT 
-                            記録.競技番号,
-                            記録.ゴール, 
-                             rank() over (partition by 記録.競技番号 ORDER BY 記録.ゴール ASC) AS 順位
-                       FROM 記録
-                        WHERE 記録.事由表示 = 0 and 選手番号>0 and 記録.大会番号=@eventNo
-                    )
-                    SELECT 
-                        プログラム.表示用競技番号,
-                        プログラム.性別コード ,
-                        プログラム.距離コード, 
-                        プログラム.種目コード,
-                        最速記録.ゴール as 記録
-                    FROM プログラム
-                    INNER JOIN 最速記録 ON 最速記録.競技番号 = プログラム.競技番号 AND 最速記録.順位 = 1
-                    WHERE プログラム.大会番号 = @eventNo
-                    ORDER BY プログラム.表示用競技番号;";
-            }
+                if (NewRecordExporter.ClassExist())
+                {
+                    query += ", 記録.新記録判定クラス";
+                }
+                query = query + $@"  ORDER BY 記録.ゴール ASC) AS 順位,
+            プログラム.性別コード as 性別コード, ";
+                if (NewRecordExporter.ClassExist())
+                {
+                    query += " 記録.新記録判定クラス, ";
+                }
+
+                query = query + $@"
+                       プログラム.距離コード,
+            プログラム.種目コード,
+            記録.ゴール,
+            選手.氏名 as 氏名,
+            選手.所属名称1 as 所属
+        from 記録
+            inner join 選手 on 選手.選手番号 = 記録.選手番号
+                and 選手.大会番号 = 記録.大会番号
+            inner join プログラム on プログラム.競技番号 = 記録.競技番号
+                and プログラム.大会番号 = 記録.大会番号
+        where 記録.事由表示 = 0 
+          and 選手.大会番号 = @eventNo
+          and プログラム.種目コード < 6
+          and 記録.ゴール <> ''
+
+        union all
+
+        SELECT
+            rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位,
+            プログラム.性別コード as 性別コード,";
+                if (NewRecordExporter.ClassExist())
+                {
+                    query += "記録.新記録判定クラス,";
+                }
+                query += $@"
+            プログラム.距離コード,
+            プログラム.種目コード,
+            記録.ゴール,
+            concat(
+                選手1.氏名, ' ・ ',
+                選手2.氏名, ' ・ ',
+                選手3.氏名, ' ・ ',
+                選手4.氏名
+            ) as 氏名,
+            リレーチーム.チーム名 as 所属
+        from 記録
+            inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号
+                and リレーチーム.大会番号 = 記録.大会番号
+            inner join 選手 as 選手1 on 選手1.選手番号 = 記録.第１泳者
+                and 選手1.大会番号 = 記録.大会番号
+            inner join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者
+                and 選手2.大会番号 = 記録.大会番号
+            inner join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者
+                and 選手3.大会番号 = 記録.大会番号
+            inner join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者
+                and 選手4.大会番号 = 記録.大会番号
+            inner join プログラム on プログラム.競技番号 = 記録.競技番号
+                and プログラム.大会番号 = 記録.大会番号
+        where 記録.事由表示 = 0
+          and 記録.大会番号 = @eventNo
+          and プログラム.種目コード > 5
+          and 記録.ゴール <> ''
+    )
+    select 
+        myresult.性別コード,
+        myresult.距離コード,
+        myresult.種目コード,
+        myresult.ゴール as 記録,
+　　　　myresult.新記録判定クラス,
+        myresult.氏名,
+        myresult.所属
+    from myresult";
+                if (NewRecordExporter.ClassExist())
+                {
+                    query += "   inner join クラス on クラス.クラス番号 = myresult.新記録判定クラス";
+                }
+                query += $@"
+        inner join 距離 on 距離.距離コード = myresult.距離コード
+        inner join 種目 on 種目.種目コード = myresult.種目コード
+    where myresult.順位 = 1 ";
+                if (NewRecordExporter.ClassExist())
+                {
+                    query += $"  and クラス.大会番号 = @eventNo";
+
+                }
+                query += " order by ";
+                if (NewRecordExporter.ClassExist())
+                {
+                    query += "クラス.クラス番号, ";
+                }
+                query += " 性別コード, myresult.種目コード, myresult.距離コード; ";
+            
             string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                using (SqlCommand command = new SqlCommand(mySql, connection))
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     command.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
                     using (SqlDataReader reader = command.ExecuteReader())
@@ -208,6 +265,8 @@ namespace SeikoHelper
                             int distanceCode;
                             int classNo;
                             string myStrTime;
+                            string swimmerName;
+                            string shozoku;
                             //string myStrTime = (string) reader["ゴール"];
                             int mytime;
                             int thisGR;
@@ -215,6 +274,8 @@ namespace SeikoHelper
                             genderCode = ConvToInt(reader["性別コード"]);
                             strokeCode = ConvToInt(reader["種目コード"]);
                             distanceCode = ConvToInt(reader["距離コード"]);
+                            swimmerName = (string)reader["氏名"];
+                            shozoku = (string)reader["所属"];
                             if (classExist)
                                 classNo = ConvToInt(reader["新記録判定クラス"]);
                             else classNo = 0;
@@ -229,7 +290,7 @@ namespace SeikoHelper
                                 thisGR =  TimeStr2Int( gameRecord);
                                 if ( mytime<thisGR)
                                 {
-                                    UpdateGameRecord(genderCode, classNo, distanceCode, strokeCode, myStrTime );
+                                    UpdateGameRecord(genderCode, classNo, distanceCode, strokeCode, myStrTime,swimmerName,shozoku);
                                 }
 
                             }
