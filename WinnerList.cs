@@ -22,120 +22,158 @@ namespace SeikoHelper
             string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
 
             string query = $@"
-    with myresult as (
-        SELECT 
-            rank() over (partition by 記録.競技番号";
-            
-            if ( NewRecordExporter.ClassExist())
-            {
-                query +=  ", 記録.新記録判定クラス";
-            }
-            query = query + $@"  ORDER BY 記録.ゴール ASC) AS 順位,
-            プログラム.性別コード as 性別コード, ";
-            if (NewRecordExporter.ClassExist())
-            {
-                query +=  " 記録.新記録判定クラス, ";
-            }
+IF EXISTS (SELECT 1 FROM クラス WHERE 大会番号 = @eventNo)
+BEGIN
+-- クラスが存在する場合
+with myresult as (
+     SELECT 
+             rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位 ,
+      プログラム.性別コード as 性別コード ,
+        記録.新記録判定クラス , 
+        プログラム.距離コード, 
+        プログラム.種目コード, 
+        記録.ゴール, 
+        記録.新記録印刷マーク, 
+        選手.氏名 as 氏名, 
+        選手.所属名称1 as 所属 
 
-            query = query + $@"
-                       プログラム.距離コード,
-            プログラム.種目コード,
-            記録.ゴール,
-            記録.新記録印刷マーク,
-            選手.氏名 as 氏名,
-            選手.所属名称1 as 所属
-        from 記録
-            inner join 選手 on 選手.選手番号 = 記録.選手番号
-                and 選手.大会番号 = 記録.大会番号
-            inner join プログラム on プログラム.競技番号 = 記録.競技番号
-                and プログラム.大会番号 = 記録.大会番号
-        where 記録.事由表示 = 0 
-          and 選手.大会番号 = {eventNo}
-          and プログラム.種目コード < 6
-          and 記録.ゴール <> ''
-          and (プログラム.予決コード = 6 or プログラム.予決コード = 3)
+   from 記録 
+    INNER JOIN 選手 ON 選手.選手番号 = 記録.選手番号 
+	     and 選手.大会番号=記録.大会番号
+    inner join プログラム on プログラム.競技番号=記録.競技番号 
+         and プログラム.大会番号=記録.大会番号
+ WHERE 記録.事由表示 = 0 and  記録.大会番号=   @eventNo 
+    　　and プログラム.種目コード<6 
+          and 記録.ゴール <> '' 
+        and (プログラム.予決コード=6 or プログラム.予決コード=3) 
+       Union ALL 
+    SELECT 
+         rank() over (partition by 記録.競技番号, 記録.新記録判定クラス
+			 ORDER BY 記録.ゴール ASC) AS 順位 , 
+   プログラム.性別コード as 性別コード,     
+        記録.新記録判定クラス, 
+        プログラム.距離コード, 
+        プログラム.種目コード, 
+        記録.ゴール, 
+        記録.新記録印刷マーク,       
+        concat (選手1.氏名, ' ・ ', 選手2.氏名,' ・ ',  選手3.氏名,' ・ ',  選手4.氏名 ) as 氏名,
+   リレーチーム.チーム名 as 所属
+   from 記録 
+ 
+    inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 and リレーチーム.大会番号 =記録.大会番号
+    INNER JOIN 選手 as 選手1 ON 選手1.選手番号 = 記録.第１泳者 and 選手1.大会番号=記録.大会番号
+    inner join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者 and 選手2.大会番号=記録.大会番号
+    inner join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者 and 選手3.大会番号=記録.大会番号
+    inner join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者 and 選手4.大会番号=記録.大会番号
+    inner join プログラム on プログラム.競技番号=記録.競技番号 and プログラム.大会番号=  記録.大会番号
 
-        union all
+    WHERE 記録.事由表示 = 0 
+       and 記録.大会番号=   @eventNo 
+    　　and プログラム.種目コード>5 
+           and 記録.ゴール <> '' 
+        and (プログラム.予決コード=6 or プログラム.予決コード=3) 
+    ) 
+    select 
+     クラス.クラス名称, 
+     case myresult.性別コード　
+	  when 1 then '男子'
+	  when 2 then '女子'
+	  when 3 then '混成'
+	  when 4 then '混合'
+	  end as 性別,
+     距離.距離, 
+     種目.種目, 
+     myresult.ゴール as 記録, 
+     myresult.氏名, 
+     myresult.所属, 
+     myresult.新記録印刷マーク
+	 
+     from myresult 
+	 inner join クラス on クラス.クラス番号=myresult.新記録判定クラス 
+	 inner join 距離 on 距離.距離コード = myresult.距離コード
+	 inner join 種目 on 種目.種目コード = myresult.種目コード
+	 where myresult.順位=1 
+	   and クラス.大会番号=@eventNo
+	  
+	 order by クラス名称,性別, myresult.種目コード, myresult.距離コード
+END	
+ELSE BEGIN
+-- クラスがない場合
+with myresult as (
+     SELECT 
+             rank() over (partition by 記録.競技番号 ORDER BY 記録.ゴール ASC) AS 順位 ,
+      プログラム.性別コード as 性別コード ,
+        プログラム.距離コード, 
+        プログラム.種目コード, 
+        記録.ゴール, 
+        記録.新記録印刷マーク, 
+        選手.氏名 as 氏名, 
+        選手.所属名称1 as 所属 
 
-        SELECT
-            rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位,
-            プログラム.性別コード as 性別コード,";
-            if (NewRecordExporter.ClassExist())
-            {
-                query +=  "記録.新記録判定クラス,";
-            }
-            query +=  $@"
-            プログラム.距離コード,
-            プログラム.種目コード,
-            記録.ゴール,
-            記録.新記録印刷マーク,
-            concat(
-                選手1.氏名, CHAR(10),
-                選手2.氏名, CHAR(10),
-                選手3.氏名, CHAR(10),
-                選手4.氏名
-            ) as 氏名,
-            リレーチーム.チーム名 as 所属
-        from 記録
-            inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号
-                and リレーチーム.大会番号 = 記録.大会番号
-            inner join 選手 as 選手1 on 選手1.選手番号 = 記録.第１泳者
-                and 選手1.大会番号 = 記録.大会番号
-            inner join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者
-                and 選手2.大会番号 = 記録.大会番号
-            inner join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者
-                and 選手3.大会番号 = 記録.大会番号
-            inner join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者
-                and 選手4.大会番号 = 記録.大会番号
-            inner join プログラム on プログラム.競技番号 = 記録.競技番号
-                and プログラム.大会番号 = 記録.大会番号
-        where 記録.事由表示 = 0
-          and 記録.大会番号 = {eventNo}
-          and プログラム.種目コード > 5
-          and 記録.ゴール <> ''
-          and (プログラム.予決コード = 6 or プログラム.予決コード = 3)
-    )
-    select ";
-            if (NewRecordExporter.ClassExist())
-            {
-                query +=  " クラス.クラス名称,";
-            }
-            query += $@"
-        case myresult.性別コード
-            when 1 then '男子'
-            when 2 then '女子'
-            when 3 then '混成'
-            when 4 then '混合'
-        end as 性別,
-        距離.距離,
-        種目.種目,
-        myresult.ゴール as 記録,
-        myresult.氏名,
-        myresult.所属,
-        myresult.新記録印刷マーク
-    from myresult";
-            if (NewRecordExporter.ClassExist())
-            {
-                query += "   inner join クラス on クラス.クラス番号 = myresult.新記録判定クラス";
-            }
-            query += $@"
-        inner join 距離 on 距離.距離コード = myresult.距離コード
-        inner join 種目 on 種目.種目コード = myresult.種目コード
-    where myresult.順位 = 1 ";
-            if (NewRecordExporter.ClassExist())
-            {
-                query += $"  and クラス.大会番号 = {eventNo}";
+   from 記録 
+    INNER JOIN 選手 ON 選手.選手番号 = 記録.選手番号 
+	     and 選手.大会番号=記録.大会番号
+    inner join プログラム on プログラム.競技番号=記録.競技番号 
+         and プログラム.大会番号=記録.大会番号
+ WHERE 記録.事由表示 = 0 and  記録.大会番号=   @eventNo 
+    　　and プログラム.種目コード<6 --個人種目
+          and 記録.ゴール <> '' 
+        and (プログラム.予決コード=6 or プログラム.予決コード=3) 
+       Union ALL 
+    SELECT 
+         rank() over (partition by 記録.競技番号, 記録.新記録判定クラス
+			 ORDER BY 記録.ゴール ASC) AS 順位 , 
+   プログラム.性別コード as 性別コード,
+ 
+        プログラム.距離コード, 
+        プログラム.種目コード, 
+        記録.ゴール, 
+        記録.新記録印刷マーク,       
+        concat (選手1.氏名, ' ・ ', 選手2.氏名,' ・ ',  選手3.氏名,' ・ ',  選手4.氏名 ) as 氏名,
+   リレーチーム.チーム名 as 所属
+   from 記録 
+ 
+    inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 and リレーチーム.大会番号 =記録.大会番号
+    INNER JOIN 選手 as 選手1 ON 選手1.選手番号 = 記録.第１泳者 and 選手1.大会番号=記録.大会番号
+    inner join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者 and 選手2.大会番号=記録.大会番号
+    inner join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者 and 選手3.大会番号=記録.大会番号
+    inner join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者 and 選手4.大会番号=記録.大会番号
+    inner join プログラム on プログラム.競技番号=記録.競技番号 and プログラム.大会番号=  記録.大会番号
 
-            }
-            query += " order by ";
-            if (NewRecordExporter.ClassExist()) {
-                query += "クラス.クラス番号, ";
-            }
-            query+= " 性別, myresult.種目コード, myresult.距離コード; ";
+    WHERE 記録.事由表示 = 0 
+       and 記録.大会番号=   @eventNo 
+    　　and プログラム.種目コード>5 
+           and 記録.ゴール <> '' 
+        and (プログラム.予決コード=6 or プログラム.予決コード=3) 
+    ) 
+    select 
+     '' as クラス名称, 
+     case myresult.性別コード　
+	  when 1 then '男子'
+	  when 2 then '女子'
+	  when 3 then '混成'
+	  when 4 then '混合'
+	  end as 性別,
+     距離.距離, 
+     種目.種目, 
+     myresult.ゴール as 記録, 
+     myresult.氏名, 
+     myresult.所属, 
+     myresult.新記録印刷マーク
+	 
+     from myresult 
+	 inner join 距離 on 距離.距離コード = myresult.距離コード
+	 inner join 種目 on 種目.種目コード = myresult.種目コード
+	 where myresult.順位=1 
+	 order by 性別, myresult.種目コード, myresult.距離コード
+
+
+END;";
 
             using (var con = new SqlConnection(connectionString))
             using (var cmd = new SqlCommand(query, con))
             {
+                cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
                 con.Open();
                 var dt = new DataTable();
                 using (var reader = cmd.ExecuteReader())
@@ -153,15 +191,12 @@ namespace SeikoHelper
                     int row = 3;
                     foreach (DataRow dr in dt.Rows)
                     {
-                        if (NewRecordExporter.ClassExist())
+                        if (className != (string)dr["クラス名称"]) 
                         {
-                            if (className != (string)dr["クラス名称"])
-                            {
-                                className = (string)dr["クラス名称"];
-                                ws.Cell(row, 1).Value = className;
-                                gender = "";
-                                row++;
-                            }
+                            className = (string)dr["クラス名称"];
+                            ws.Cell(row, 1).Value = className;
+                            gender = "";
+                            row++;
                         }
                         if (gender != (string)dr["性別"])
                         {
