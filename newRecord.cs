@@ -5,6 +5,8 @@ using System.Text;
 using System.Windows.Forms;
 using DocumentFormat.OpenXml.Presentation;
 using Microsoft.Data.SqlClient;
+using ClosedXML.Excel;
+using System.Diagnostics;
 
 namespace SeikoHelper
 {
@@ -146,6 +148,168 @@ namespace SeikoHelper
             if (value == null || value == DBNull.Value)
                 return 0;
             return Convert.ToInt32(value);
+        }
+        public static void UpdateDB(string serverName, int eventNo,string fileName)
+        {
+            // 保存先のフルパス（任意で変更可）
+            string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            //string folderPath = "C:\\Users\\user";
+            string fullPath = Path.Combine(folderPath, fileName);
+
+            // フォルダがなければ作成
+            Directory.CreateDirectory(folderPath);
+            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
+
+            string query = $@"
+IF EXISTS (SELECT 1 FROM クラス WHERE 大会番号 = @eventNo)
+BEGIN
+select  
+	case 新記録.記録区分番号
+	 when 0 then ''
+	 ELSE クラス名称
+	end as 新記録区分,
+	　
+	case 性別コード
+	 when 1 then '男子'
+	 when 2 then '女子'
+	 when 3 then '混成'
+	 else '混合'
+	end as 性別,
+	距離,
+	種目,
+	記録,
+	日付,
+	記録保持者,
+	所属, 
+	新記録.会場
+	from 新記録
+ inner join 新記録名称 on 新記録名称.記録区分番号=新記録.記録区分番号
+ 　　　　　　　　　　and  新記録名称.記録名称番号=新記録.記録名称番号
+                     and  新記録名称.大会番号=新記録.大会番号
+ inner join 距離 on 距離.距離コード=新記録.距離コード
+ inner join 種目 on 種目.種目コード=新記録.種目コード
+ LEFT join クラス on クラス.クラス番号=新記録.記録区分番号
+                  and クラス.大会番号=新記録.大会番号
+ where 新記録.大会番号=@eventNo
+ order by 新記録.記録区分番号, 性別, 新記録.種目コード, 新記録.距離コード 
+  
+end 
+else begin
+
+select  
+	'' as 新記録区分,
+	case 性別コード
+	 when 1 then '男子'
+	 when 2 then '女子'
+	 when 3 then '混成'
+	 else '混合'
+	end as 性別,
+	種目,
+	距離,
+	記録,
+	日付,
+	記録保持者,
+	所属, 
+	新記録.会場
+	from 新記録
+ inner join 新記録名称 on 新記録名称.記録区分番号=新記録.記録区分番号
+ 　　　　　　　　　　and  新記録名称.記録名称番号=新記録.記録名称番号
+                     and  新記録名称.大会番号=新記録.大会番号
+ inner join 距離 on 距離.距離コード=新記録.距離コード
+ inner join 種目 on 種目.種目コード=新記録.種目コード
+ LEFT join クラス on クラス.クラス番号=新記録.記録区分番号
+                  and クラス.大会番号=新記録.大会番号
+ where 新記録.大会番号=@eventNo
+   order by  性別, 新記録.種目コード, 新記録.距離コード
+end 
+
+";
+
+            using (var con = new SqlConnection(connectionString))
+            using (var cmd = new SqlCommand(query, con))
+            {
+                cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                con.Open();
+                var dt = new DataTable();
+                using (var reader = cmd.ExecuteReader())
+                {
+                    dt.Load(reader);
+                }
+
+                // ClosedXMLでExcelファイル作成
+                using (var wb = new XLWorkbook())
+                {
+                    var ws = wb.Worksheets.Add("大会記録");
+                    string className="";
+                    string gender="";
+
+                    int row = 3;
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        if (className != (string)dr["新記録区分"]) 
+                        {
+                            className = (string)dr["新記録区分"];
+                            ws.Cell(row, 1).Value = className;
+                            gender = "";
+                            row++;
+                        }
+                        if (gender != (string)dr["性別"])
+                        {
+                            gender = (string)dr["性別"];
+                            ws.Cell(row, 2).Value = gender;
+                            row++;
+                        }
+                        ws.Cell(row, 3).Value = (string)dr["種目"];
+                        ws.Cell(row, 4).Value = (string)dr["距離"];
+
+                        ws.Cell(row, 5).Value = (string)dr["記録"];
+                        
+                        // 氏名（改行あり）
+                        var nameCell = ws.Cell(row, 6);
+                        nameCell.Value = (string)dr["記録保持者"];
+                        nameCell.Style.Alignment.WrapText = true; // 改行を有効にする
+
+                        ws.Cell(row, 3).Value = (string)dr["種目"];
+                        ws.Cell(row, 4).Value = (string)dr["距離"];
+                        ws.Cell(row, 5).Value = (string)dr["記録"];
+                        ws.Cell(row, 6).Value = (string)dr["記録保持者"];
+                        ws.Cell(row, 7).Value = (string)dr["所属"];
+                        ws.Cell(row, 8).Value = (string)dr["日付"];
+                        ws.Cell(row, 9).Value = (string)dr["会場"];
+                        row++;
+                    }
+                    ws.Cell(1, 1).Value = GlobalV.EventName+"大会記録";
+                    ws.Cell(2, 8).Value = "日付";
+                    ws.Cell(2, 9).Value = "会場";
+                    ws.Column(1).Width = 2;  // クラス
+                    ws.Column(2).Width = 2;  // 性別
+                    ws.Column(3).Width = 15; // 種目
+                    ws.Column(4).Width = 6;  // 距離
+                    ws.Column(5).Width = 9;  // タイム
+                    ws.Column(6).Width = 14; // 記録保持者
+                    ws.Column(7).Width = 15; // 所属
+                    ws.Column(8).Width = 12; // 日付
+                    ws.Column(9).Width = 45; // 会場
+
+                    ws.Column(4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                    ws.Column(5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+
+                    // ファイル保存
+                    wb.SaveAs(fullPath);
+                    var result = MessageBox.Show(
+                        $"Excelファイルを保存しました：\n{fullPath}\n\n開きますか？",
+                        "完了",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information
+                    );
+
+                    if (result == DialogResult.Yes)
+                    {
+                        Process.Start("explorer.exe", $"\"{fullPath}\"");
+                    }
+                }
+            }
         }
         public static void UpdateGameRecord()
         {
