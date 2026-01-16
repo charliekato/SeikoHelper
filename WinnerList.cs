@@ -34,6 +34,7 @@ with myresult as (
         プログラム.種目コード, 
         記録.ゴール, 
         記録.新記録印刷マーク, 
+        中間新記録マーク,
         選手.氏名 as 氏名, 
         選手.所属名称1 as 所属 
 
@@ -44,7 +45,8 @@ with myresult as (
          and プログラム.大会番号=記録.大会番号
  WHERE 記録.事由表示 = 0 and  記録.大会番号=   @eventNo 
     　　and プログラム.種目コード<6 
-          and 記録.ゴール <> '' 
+        and 記録.ゴール <> '' 
+        and 記録.オープン=0
         and (プログラム.予決コード=6 or プログラム.予決コード=3) 
        Union ALL 
     SELECT 
@@ -55,7 +57,8 @@ with myresult as (
         プログラム.距離コード, 
         プログラム.種目コード, 
         記録.ゴール, 
-        記録.新記録印刷マーク,       
+        記録.新記録印刷マーク,
+        中間新記録マーク,
         concat (選手1.氏名, ' ・ ', 選手2.氏名,' ・ ',  選手3.氏名,' ・ ',  選手4.氏名 ) as 氏名,
    リレーチーム.チーム名 as 所属
    from 記録 
@@ -68,9 +71,10 @@ with myresult as (
     inner join プログラム on プログラム.競技番号=記録.競技番号 and プログラム.大会番号=  記録.大会番号
 
     WHERE 記録.事由表示 = 0 
-       and 記録.大会番号=   @eventNo 
+        and 記録.大会番号=   @eventNo 
     　　and プログラム.種目コード>5 
-           and 記録.ゴール <> '' 
+        and 記録.ゴール <> '' 
+        and 記録.オープン=0
         and (プログラム.予決コード=6 or プログラム.予決コード=3) 
     ) 
     select 
@@ -86,16 +90,15 @@ with myresult as (
      myresult.ゴール as 記録, 
      myresult.氏名, 
      myresult.所属, 
-     myresult.新記録印刷マーク
-	 
+     myresult.新記録印刷マーク,
+	 myresult.中間新記録マーク
      from myresult 
 	 inner join クラス on クラス.クラス番号=myresult.新記録判定クラス 
 	 inner join 距離 on 距離.距離コード = myresult.距離コード
 	 inner join 種目 on 種目.種目コード = myresult.種目コード
 	 where myresult.順位=1 
 	   and クラス.大会番号=@eventNo
-	  
-	 order by クラス名称,性別, myresult.種目コード, myresult.距離コード
+	 order by クラス.クラス番号,性別, myresult.種目コード, myresult.距離コード
 END	
 ELSE BEGIN
 -- クラスがない場合
@@ -106,7 +109,8 @@ with myresult as (
         プログラム.距離コード, 
         プログラム.種目コード, 
         記録.ゴール, 
-        記録.新記録印刷マーク, 
+        記録.新記録印刷マーク,
+        中間新記録マーク,
         選手.氏名 as 氏名, 
         選手.所属名称1 as 所属 
 
@@ -117,7 +121,8 @@ with myresult as (
          and プログラム.大会番号=記録.大会番号
  WHERE 記録.事由表示 = 0 and  記録.大会番号=   @eventNo 
     　　and プログラム.種目コード<6 --個人種目
-          and 記録.ゴール <> '' 
+        and 記録.ゴール <> '' 
+        and 記録.オープン=0
         and (プログラム.予決コード=6 or プログラム.予決コード=3) 
        Union ALL 
     SELECT 
@@ -128,7 +133,8 @@ with myresult as (
         プログラム.距離コード, 
         プログラム.種目コード, 
         記録.ゴール, 
-        記録.新記録印刷マーク,       
+        記録.新記録印刷マーク,
+        中間新記録マーク,
         concat (選手1.氏名, ' ・ ', 選手2.氏名,' ・ ',  選手3.氏名,' ・ ',  選手4.氏名 ) as 氏名,
    リレーチーム.チーム名 as 所属
    from 記録 
@@ -143,7 +149,8 @@ with myresult as (
     WHERE 記録.事由表示 = 0 
        and 記録.大会番号=   @eventNo 
     　　and プログラム.種目コード>5 
-           and 記録.ゴール <> '' 
+        and 記録.ゴール <> '' 
+        and 記録.オープン=0
         and (プログラム.予決コード=6 or プログラム.予決コード=3) 
     ) 
     select 
@@ -159,15 +166,13 @@ with myresult as (
      myresult.ゴール as 記録, 
      myresult.氏名, 
      myresult.所属, 
-     myresult.新記録印刷マーク
-	 
+     myresult.新記録印刷マーク,
+	 myresult.中間新記録マーク
      from myresult 
 	 inner join 距離 on 距離.距離コード = myresult.距離コード
 	 inner join 種目 on 種目.種目コード = myresult.種目コード
 	 where myresult.順位=1 
 	 order by 性別, myresult.種目コード, myresult.距離コード
-
-
 END;";
 
             using (var con = new SqlConnection(connectionString))
@@ -216,6 +221,7 @@ END;";
 
                         ws.Cell(row, 7).Value = (string)dr["所属"];
                         ws.Cell(row, 8).Value = (string)dr["新記録印刷マーク"];
+                        ws.Cell(row, 9).Value = (string)dr["中間新記録マーク"];
                         row++;
                     }
                     ws.Cell(1, 1).Value = GlobalV.EventName+"優勝者リスト";
