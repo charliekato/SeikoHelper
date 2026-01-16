@@ -31,11 +31,12 @@
             labelMenu = new Label();
             labelEntryList = new Label();
             lblGoDoCreater = new Label();
-            lblExtractNewRecord = new Label();
             lblSCLASS = new Label();
             rdbYokoMochi = new RadioButton();
             rdbTateMochi = new RadioButton();
             labelWinnerList = new Label();
+            lblExtractNewRecord = new Label();
+            labelNewRecordSet = new Label();
             SuspendLayout();
             // 
             // labelMenu
@@ -70,22 +71,11 @@
             lblGoDoCreater.Text = "合同クリエーター";
             lblGoDoCreater.Click += GodoCreaterClick;
             // 
-            // lblExtractNewRecord
-            // 
-            lblExtractNewRecord.AutoSize = true;
-            lblExtractNewRecord.Font = new Font("Yu Gothic UI", 12F);
-            lblExtractNewRecord.Location = new Point(82, 318);
-            lblExtractNewRecord.Name = "lblExtractNewRecord";
-            lblExtractNewRecord.Size = new Size(112, 28);
-            lblExtractNewRecord.TabIndex = 7;
-            lblExtractNewRecord.Text = "新記録抽出";
-            lblExtractNewRecord.Click += lblExtractNewRecord_Click;
-            // 
             // lblSCLASS
             // 
             lblSCLASS.AutoSize = true;
             lblSCLASS.Font = new Font("Yu Gothic UI", 12F);
-            lblSCLASS.Location = new Point(82, 392);
+            lblSCLASS.Location = new Point(82, 444);
             lblSCLASS.Name = "lblSCLASS";
             lblSCLASS.Size = new Size(216, 28);
             lblSCLASS.TabIndex = 8;
@@ -125,11 +115,34 @@
             labelWinnerList.Text = "優勝者リスト作成";
             labelWinnerList.Click += labelWinnerList_Click;
             // 
+            // lblExtractNewRecord
+            // 
+            lblExtractNewRecord.AutoSize = true;
+            lblExtractNewRecord.Font = new Font("Yu Gothic UI", 12F);
+            lblExtractNewRecord.Location = new Point(82, 318);
+            lblExtractNewRecord.Name = "lblExtractNewRecord";
+            lblExtractNewRecord.Size = new Size(112, 28);
+            lblExtractNewRecord.TabIndex = 7;
+            lblExtractNewRecord.Text = "新記録抽出";
+            lblExtractNewRecord.Click += lblExtractNewRecord_Click;
+            // 
+            // labelNewRecordSet
+            // 
+            labelNewRecordSet.AutoSize = true;
+            labelNewRecordSet.Font = new Font("Yu Gothic UI", 12F);
+            labelNewRecordSet.Location = new Point(82, 380);
+            labelNewRecordSet.Name = "labelNewRecordSet";
+            labelNewRecordSet.Size = new Size(132, 28);
+            labelNewRecordSet.TabIndex = 12;
+            labelNewRecordSet.Text = "発生大会記録";
+            labelNewRecordSet.Click += labelNewRecordSet_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(812, 528);
+            Controls.Add(labelNewRecordSet);
             Controls.Add(labelWinnerList);
             Controls.Add(rdbTateMochi);
             Controls.Add(rdbYokoMochi);
@@ -149,10 +162,11 @@
         private Label labelMenu;
         private Label labelEntryList;
         private Label lblGoDoCreater;
-        private Label lblExtractNewRecord;
         private Label lblSCLASS;
         private RadioButton rdbYokoMochi;
         private RadioButton rdbTateMochi;
         private Label labelWinnerList;
+        private Label lblExtractNewRecord;
+        private Label labelNewRecordSet;
     }
 }
