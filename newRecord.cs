@@ -18,21 +18,26 @@ namespace SeikoHelper
             string temp = myTime.Replace(".", "");
             return  Convert.ToInt32(temp.Replace(":",""));
         }
-        private static void InsertGameRecord(int genderCode, int classNo, int distanceCode, int strokeCode, string GR)
+        private static void InsertGameRecord(int genderCode, int classNo, int distanceCode,
+            int strokeCode, string GR,string name, string shozoku, string eventName, string hizuke, string venue)
         {
             string myQuery;
             if ( classNo>0)
             {
-
-                myQuery= @" 
+                myQuery = @" 
                      insert into 新記録 ( 大会番号, 性別コード, 記録区分番号,
-                     記録名称番号, 種目コード, 距離コード, 記録) values
-                     ( @eventNo, @gender, @classNo, 1, @strokeCode, @distanceCode, @GR ) ";
+                     記録名称番号, 種目コード, 距離コード, 記録,保持者番号, 記録保持者, 
+                    所属,競技会名, 日付, 会場) values
+                     ( @eventNo, @gender, @classNo, 1, @strokeCode, 
+                       @distanceCode,@GR,@holderNo, @name,@shozoku, @eventName, 
+                        @hizuke,@venue )"; 
             } else
             {
                 myQuery = @"  insert into 新記録 ( 大会番号, 性別コード, 
-                     記録名称番号, 種目コード, 距離コード, 記録) values
-                     ( @eventNo, @gender, 1, @strokeCode, @distanceCode, @GR )";
+                     記録名称番号, 種目コード, 距離コード, 記録,保持者番号,記録保持者, 所属,競技会名, 日付, 会場) values
+                     ( @eventNo, @gender, 1, @strokeCode, 
+                       @distanceCode, @GR ,@holderNo, @name, @shozoku,
+                       @eventName, @hizuke,@venue)";
             }
             string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -46,15 +51,29 @@ namespace SeikoHelper
                     command.Parameters.Add("@strokeCode", SqlDbType.Int).Value = strokeCode;
                     command.Parameters.Add("@distanceCode", SqlDbType.Int).Value = distanceCode;
                     command.Parameters.Add("@classNo", SqlDbType.Int).Value = classNo;
-                    command.Parameters.Add("@GR", SqlDbType.NVarChar).Value = GR;
+                    command.Parameters.Add("@GR", SqlDbType.NVarChar,8).Value = GR;
+                    command.Parameters.Add("@holderNo", SqlDbType.Int).Value = 0;
+                    //command.Parameters.Add("@name", SqlDbType.NVarChar,30).Value = name;
+                    command.Parameters.AddWithValue("@name", name);
+                    //command.Parameters.Add("@shozoku", SqlDbType.NVarChar,16).Value = shozoku;
+                    command.Parameters.AddWithValue("@shozoku", shozoku);
+                    //command.Parameters.Add("@eventName", SqlDbType.NVarChar,50).Value = eventName.Substring(0,48);
+                    command.Parameters.AddWithValue("@eventName", eventName);
+                    //command.Parameters.Add("@hizuke", SqlDbType.NVarChar,10).Value = hizuke;
+                    command.Parameters.AddWithValue("@hizuke", hizuke);
+                    //command.Parameters.Add("@venue", SqlDbType.NVarChar,30).Value = venue.Substring(0,27);
+                    command.Parameters.AddWithValue("@venue", venue);
                     command.ExecuteNonQuery();
                 }
             }
         }
-        private static void UpdateGameRecord(int genderCode, int classNo, int distanceCode, int strokeCode, string GR, string swimmer, string shozoku)
+        private static void UpdateGameRecord(int genderCode, int classNo, int distanceCode,
+            int strokeCode, string GR, string swimmer, string shozoku,string eventName,
+            string hizuke, string venue)
         {
             string myQuery = @" 
-                update 新記録 set 記録=@GR , 記録保持者=@Name, 所属=@Shozoku, 日付=@Date, 会場=@Venue
+                update 新記録 set 記録=@GR , 記録保持者=@Name, 所属=@Shozoku, 日付=@Date,
+                                  競技会名=@eventName,会場=@Venue
                        where 大会番号=@eventNo
                        and 性別コード=@gender
                        and 記録区分番号=@classNo
@@ -74,10 +93,11 @@ namespace SeikoHelper
                     command.Parameters.Add("@distanceCode", SqlDbType.Int).Value = distanceCode;
                     command.Parameters.Add("@classNo", SqlDbType.Int).Value = classNo;
                     command.Parameters.Add("@GR", SqlDbType.NVarChar).Value = GR;
-                    command.Parameters.Add("@Name", SqlDbType.NVarChar).Value=swimmer; ;
-                    command.Parameters.Add("@shozoku", SqlDbType.NVarChar).Value=shozoku; ;
-                    command.Parameters.Add("@Date", SqlDbType.NVarChar).Value = WinnerList.EventDate.Trim();
-                    command.Parameters.Add("@Venue",SqlDbType.NVarChar).Value=WinnerList.EventVenue;
+                    command.Parameters.Add("@Name", SqlDbType.NVarChar).Value=swimmer; 
+                    command.Parameters.Add("@shozoku", SqlDbType.NVarChar).Value=shozoku; 
+                    command.Parameters.Add("@eventName", SqlDbType.NVarChar).Value=eventName; 
+                    command.Parameters.Add("@Date", SqlDbType.NVarChar).Value = hizuke.Trim();
+                    command.Parameters.Add("@Venue",SqlDbType.NVarChar).Value=venue;
                     command.ExecuteNonQuery();
                 }
             }
@@ -107,8 +127,17 @@ namespace SeikoHelper
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
                         if (reader.Read())
+                        {
                             GR = (string)reader["記録"];
+                            if (GR == "") GR = "99:99.99";
+                        }
                         else GR = "";
+
+                        string msgStr = " class " + classNo + ", gender: " + genderCode +
+                                        " distance: " + distanceCode + " stroke: " + strokeCode; ;
+                        /** debug */
+                            MessageBox.Show("debug >>" + GR + "<< "+ msgStr);
+
 
                     }
                 } 
@@ -148,6 +177,11 @@ namespace SeikoHelper
             if (value == null || value == DBNull.Value)
                 return 0;
             return Convert.ToInt32(value);
+        }
+        public static string if_not_null_string(object dr)
+        {
+            if (dr == DBNull.Value) return "";
+            return (string)dr;
         }
         public static void UpdateDB(string serverName, int eventNo,string fileName)
         {
@@ -265,14 +299,14 @@ end
                         ws.Cell(row, 5).Value = (string)dr["記録"];
                         
                         // 氏名（改行あり）
-                        var nameCell = ws.Cell(row, 6);
-                        nameCell.Value = (string)dr["記録保持者"];
-                        nameCell.Style.Alignment.WrapText = true; // 改行を有効にする
+                        //var nameCell = ws.Cell(row, 6);
+                        ws.Cell(row,6).Value = if_not_null_string(dr["記録保持者"]);
+                        ws.Cell(row,6).Style.Alignment.WrapText = true; // 改行を有効にする
 
                         ws.Cell(row, 3).Value = (string)dr["種目"];
                         ws.Cell(row, 4).Value = (string)dr["距離"];
                         ws.Cell(row, 5).Value = (string)dr["記録"];
-                        ws.Cell(row, 6).Value = (string)dr["記録保持者"];
+                        ws.Cell(row, 6).Value = if_not_null_string(dr["記録保持者"]);
                         ws.Cell(row, 7).Value = (string)dr["所属"];
                         ws.Cell(row, 8).Value = (string)dr["日付"];
                         ws.Cell(row, 9).Value = (string)dr["会場"];
@@ -319,13 +353,13 @@ end
         SELECT 
             rank() over (partition by 記録.競技番号";
 
-                if (NewRecordExporter.ClassExist())
+                if (classExist)
                 {
                     query += ", 記録.新記録判定クラス";
                 }
                 query = query + $@"  ORDER BY 記録.ゴール ASC) AS 順位,
             プログラム.性別コード as 性別コード, ";
-                if (NewRecordExporter.ClassExist())
+                if (classExist)
                 {
                     query += " 記録.新記録判定クラス, ";
                 }
@@ -335,15 +369,20 @@ end
             プログラム.種目コード,
             記録.ゴール,
             選手.氏名 as 氏名,
-            選手.所属名称1 as 所属
+            選手.所属名称1 as 所属,
+            プログラム.日付,
+　　　　　　大会設定.大会名１ as 競技会名,
+            大会設定.開催地
         from 記録
             inner join 選手 on 選手.選手番号 = 記録.選手番号
                 and 選手.大会番号 = 記録.大会番号
             inner join プログラム on プログラム.競技番号 = 記録.競技番号
                 and プログラム.大会番号 = 記録.大会番号
+            inner join 大会設定 on 大会設定.大会番号 = 記録.大会番号
         where 記録.事由表示 = 0 
           and 選手.大会番号 = @eventNo
           and プログラム.種目コード < 6
+          and 記録.オープン=0
           and 記録.ゴール <> ''
 
         union all
@@ -351,7 +390,7 @@ end
         SELECT
             rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位,
             プログラム.性別コード as 性別コード,";
-                if (NewRecordExporter.ClassExist())
+                if (classExist)
                 {
                     query += "記録.新記録判定クラス,";
                 }
@@ -365,7 +404,10 @@ end
                 選手3.氏名, ' ・ ',
                 選手4.氏名
             ) as 氏名,
-            リレーチーム.チーム名 as 所属
+            リレーチーム.チーム名 as 所属,
+            プログラム.日付,
+            大会設定.大会名１ as 競技会名,
+            大会設定.開催地
         from 記録
             inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号
                 and リレーチーム.大会番号 = 記録.大会番号
@@ -379,9 +421,11 @@ end
                 and 選手4.大会番号 = 記録.大会番号
             inner join プログラム on プログラム.競技番号 = 記録.競技番号
                 and プログラム.大会番号 = 記録.大会番号
+            inner join 大会設定 on 大会設定.大会番号 = 記録.大会番号
         where 記録.事由表示 = 0
           and 記録.大会番号 = @eventNo
           and プログラム.種目コード > 5
+          and 記録.オープン=0
           and 記録.ゴール <> ''
     )
     select 
@@ -391,9 +435,12 @@ end
         myresult.ゴール as 記録,
 　　　　myresult.新記録判定クラス,
         myresult.氏名,
-        myresult.所属
+        myresult.所属,
+        myresult.競技会名,
+        myresult.日付,
+        myresult.開催地
     from myresult";
-                if (NewRecordExporter.ClassExist())
+                if (classExist)
                 {
                     query += "   inner join クラス on クラス.クラス番号 = myresult.新記録判定クラス";
                 }
@@ -401,13 +448,13 @@ end
         inner join 距離 on 距離.距離コード = myresult.距離コード
         inner join 種目 on 種目.種目コード = myresult.種目コード
     where myresult.順位 = 1 ";
-                if (NewRecordExporter.ClassExist())
+                if (classExist)
                 {
                     query += $"  and クラス.大会番号 = @eventNo";
 
                 }
                 query += " order by ";
-                if (NewRecordExporter.ClassExist())
+                if (classExist)
                 {
                     query += "クラス.クラス番号, ";
                 }
@@ -431,6 +478,9 @@ end
                             string myStrTime;
                             string swimmerName;
                             string shozoku;
+                            string hizuke;
+                            string venue;
+                            string eventName ;
                             //string myStrTime = (string) reader["ゴール"];
                             int mytime;
                             int thisGR;
@@ -440,6 +490,10 @@ end
                             distanceCode = ConvToInt(reader["距離コード"]);
                             swimmerName = (string)reader["氏名"];
                             shozoku = (string)reader["所属"];
+                            hizuke = (string)reader["日付"];
+                            venue = (string)reader["開催地"];
+                            eventName = (string) reader["競技会名"];
+
                             if (classExist)
                                 classNo = ConvToInt(reader["新記録判定クラス"]);
                             else classNo = 0;
@@ -447,14 +501,15 @@ end
                             mytime = TimeStr2Int(myStrTime);
                             gameRecord = GetGameRecord(genderCode, classNo, distanceCode, strokeCode);
                             if (gameRecord=="" )
-                                InsertGameRecord(genderCode,classNo,distanceCode,strokeCode,myStrTime);
+                                InsertGameRecord(genderCode,classNo,distanceCode,strokeCode,
+                                    myStrTime,swimmerName, shozoku,eventName,hizuke,venue);
                             else
                             {
-
                                 thisGR =  TimeStr2Int( gameRecord);
                                 if ( mytime<thisGR)
                                 {
-                                    UpdateGameRecord(genderCode, classNo, distanceCode, strokeCode, myStrTime,swimmerName,shozoku);
+                                    UpdateGameRecord(genderCode, classNo, distanceCode, strokeCode,
+                                        myStrTime, swimmerName,shozoku,eventName,hizuke,venue);
                                 }
 
                             }
@@ -505,7 +560,7 @@ end
                 {
                     try
                     {
-                        using (var writer = new StreamWriter(sfd.FileName, false, Encoding.UTF8))
+                        using (var writer = new StreamWriter(sfd.FileName, false, Encoding.Unicode))
                         {
                             // ヘッダー
                             for (int i = 0; i < table.Columns.Count; i++)
