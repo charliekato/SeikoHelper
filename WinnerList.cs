@@ -10,8 +10,20 @@ namespace SeikoHelper
     {
         public static string EventDate = string.Empty;
         public static string EventVenue = string.Empty;
-        public static void ReadResult(string serverName, int eventNo,string fileName)
+        static bool TrySetValue(XLWorkbook wb, string name, string value)
         {
+            //if (wb.NamedRanges.TryGetValue(name, out var nr))
+            if (wb.DefinedNames.TryGetValue(name, out var nr))
+            {
+                nr.Ranges.First().Value = value;
+                return true;
+            }
+            return false;
+        }
+
+        public static void ReadResult(string serverName, int eventNo,string templatePath, string fileName)
+        {
+           
             // 保存先のフルパス（任意で変更可）
             string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             //string folderPath = "C:\\Users\\user";
@@ -27,7 +39,7 @@ BEGIN
 -- クラスが存在する場合
 with myresult as (
      SELECT 
-             rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位 ,
+         rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位 ,
       プログラム.性別コード as 性別コード ,
         記録.新記録判定クラス , 
         プログラム.距離コード, 
@@ -50,7 +62,7 @@ with myresult as (
         and (プログラム.予決コード=6 or プログラム.予決コード=3) 
        Union ALL 
     SELECT 
-         rank() over (partition by 記録.競技番号, 記録.新記録判定クラス
+        rank() over (partition by 記録.競技番号, 記録.新記録判定クラス
 			 ORDER BY 記録.ゴール ASC) AS 順位 , 
    プログラム.性別コード as 性別コード,     
         記録.新記録判定クラス, 
@@ -62,14 +74,12 @@ with myresult as (
         concat (選手1.氏名, ' ・ ', 選手2.氏名,' ・ ',  選手3.氏名,' ・ ',  選手4.氏名 ) as 氏名,
    リレーチーム.チーム名 as 所属
    from 記録 
- 
     inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 and リレーチーム.大会番号 =記録.大会番号
     INNER JOIN 選手 as 選手1 ON 選手1.選手番号 = 記録.第１泳者 and 選手1.大会番号=記録.大会番号
     inner join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者 and 選手2.大会番号=記録.大会番号
     inner join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者 and 選手3.大会番号=記録.大会番号
     inner join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者 and 選手4.大会番号=記録.大会番号
     inner join プログラム on プログラム.競技番号=記録.競技番号 and プログラム.大会番号=  記録.大会番号
-
     WHERE 記録.事由表示 = 0 
         and 記録.大会番号=   @eventNo 
     　　and プログラム.種目コード>5 
@@ -78,7 +88,7 @@ with myresult as (
         and (プログラム.予決コード=6 or プログラム.予決コード=3) 
     ) 
     select 
-     クラス.クラス名称, 
+ myresult.新記録判定クラス as クラス番号,
      case myresult.性別コード　
 	  when 1 then '男子'
 	  when 2 then '女子'
@@ -104,7 +114,7 @@ ELSE BEGIN
 -- クラスがない場合
 with myresult as (
      SELECT 
-             rank() over (partition by 記録.競技番号 ORDER BY 記録.ゴール ASC) AS 順位 ,
+         rank() over (partition by 記録.競技番号 ORDER BY 記録.ゴール ASC) AS 順位 ,
       プログラム.性別コード as 性別コード ,
         プログラム.距離コード, 
         プログラム.種目コード, 
@@ -145,7 +155,6 @@ with myresult as (
     inner join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者 and 選手3.大会番号=記録.大会番号
     inner join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者 and 選手4.大会番号=記録.大会番号
     inner join プログラム on プログラム.競技番号=記録.競技番号 and プログラム.大会番号=  記録.大会番号
-
     WHERE 記録.事由表示 = 0 
        and 記録.大会番号=   @eventNo 
     　　and プログラム.種目コード>5 
@@ -154,12 +163,12 @@ with myresult as (
         and (プログラム.予決コード=6 or プログラム.予決コード=3) 
     ) 
     select 
-     '' as クラス名称, 
+     0 as クラス番号, 
      case myresult.性別コード　
-	  when 1 then '男子'
-	  when 2 then '女子'
-	  when 3 then '混成'
-	  when 4 then '混合'
+	   when 1 then '男子'
+	   when 2 then '女子'
+	   when 3 then '混成'
+	   when 4 then '混合'
 	  end as 性別,
      距離.距離, 
      種目.種目, 
@@ -187,57 +196,38 @@ END;";
                 }
 
                 // ClosedXMLでExcelファイル作成
-                using (var wb = new XLWorkbook())
+                using (var wb = new XLWorkbook(templatePath))
                 {
-                    var ws = wb.Worksheets.Add("結果");
-                    string className="";
+                    int classNo = 0;
                     string gender="";
+                    string style;
+                    string distance;
+                    string record;
+                    string rangeName;
 
-                    int row = 3;
                     foreach (DataRow dr in dt.Rows)
                     {
-                        if (className != (string)dr["クラス名称"]) 
-                        {
-                            className = (string)dr["クラス名称"];
-                            ws.Cell(row, 1).Value = className;
-                            gender = "";
-                            row++;
-                        }
-                        if (gender != (string)dr["性別"])
-                        {
-                            gender = (string)dr["性別"];
-                            ws.Cell(row, 2).Value = gender;
-                            row++;
-                        }
-                        ws.Cell(row, 3).Value = (string)dr["種目"];
-                        ws.Cell(row, 4).Value = (string)dr["距離"];
-
-                        ws.Cell(row, 5).Value = (string)dr["記録"];
+                        classNo = Convert.ToInt32(dr["クラス番号"] );
+                        gender = (string)dr["性別"];
+                                            style = (string)dr["種目"];
+                        distance = (string)dr["距離"];
                         
-                        // 氏名（改行あり）
-                        var nameCell = ws.Cell(row, 6);
-                        nameCell.Value = (string)dr["氏名"];
-                        nameCell.Style.Alignment.WrapText = true; // 改行を有効にする
+                        rangeName=gender +classNo+"_"+ distance.Trim() +"_"+ style;
+                        TrySetValue(wb, rangeName+"Time",(string)dr["記録"]);
+                        string nameString = ((string)dr["氏名"]).Replace(" ・ ", Environment.NewLine);
 
-                        ws.Cell(row, 7).Value = (string)dr["所属"];
-                        ws.Cell(row, 8).Value = (string)dr["新記録印刷マーク"];
-                        ws.Cell(row, 9).Value = (string)dr["中間新記録マーク"];
-                        row++;
+                        TrySetValue(wb, rangeName + "Name", nameString);
+                        TrySetValue(wb, rangeName + "Team", (string)dr["所属"]);
+
+                        string recordMark = (string)dr["新記録印刷マーク"];
+                        if ((string)dr["中間新記録マーク"]!="") { 
+                            recordMark += "中間 : " + (string)dr["中間新記録マーク"];
+                        }
+                        TrySetValue(wb, rangeName + "GR", (string)dr["新記録印刷マーク"]);
                     }
-                    ws.Cell(1, 1).Value = GlobalV.EventName+"優勝者リスト";
-                    ws.Cell(2, 1).Value = EventVenue;
-                    ws.Cell(2, 7).Value = EventDate;
-                    ws.Column(1).Width = 2;  // クラス
-                    ws.Column(2).Width = 2;  // 性別
-                    ws.Column(3).Width = 15; // 種目
-                    ws.Column(4).Width = 6;  // 距離
-                    ws.Column(5).Width = 9;  // タイム
-                    ws.Column(6).Width = 15; // 氏名
-                    ws.Column(7).Width = 15; // 所属
-                    ws.Column(8).Width = 9;  // 新記録
-                    ws.Column(4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                    ws.Column(5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-
+                    TrySetValue(wb, "大会名",GlobalV.EventName+"優勝者リスト");
+                    TrySetValue(wb, "開催地", EventVenue);
+                    TrySetValue(wb, "開催日", EventDate.Trim());
 
                     // ファイル保存
                     wb.SaveAs(fullPath);

@@ -83,7 +83,18 @@ namespace SeikoHelper
         private void labelWinnerList_Click(object sender, EventArgs e)
         {
             Cursor previousCursor = Cursor.Current;
+            // テンプレート選択
+            string templatePath;
+            using (var ofd = new OpenFileDialog())
+            {
+                ofd.Title = "テンプレート Excel を選択";
+                ofd.Filter = "Excel Files (*.xlsx)|*.xlsx";
 
+                if (ofd.ShowDialog() != DialogResult.OK)
+                    return;
+
+                templatePath = ofd.FileName;
+            }
             try
             {
                 // 処理中カーソル（WaitCursor）を設定
@@ -97,7 +108,7 @@ namespace SeikoHelper
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = sfd.FileName;
-                    WinnerList.ReadResult(GlobalV.ServerName, GlobalV.EventNo, filePath);
+                    WinnerList.ReadResult(GlobalV.ServerName, GlobalV.EventNo,templatePath, filePath);
                 }
             }
             finally
