@@ -1,0 +1,52 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui" >
+  <Fragment>
+    <ComponentGroup Id="MainComponents" Directory="INSTALLFOLDER">
+      <Component>
+	 <File Source="..\bin\Release\net8.0-windows\win-x64\publish\SeikoHelper.exe" KeyPath="yes"/>
+      </Component>
+      <Component>
+	 <File Source="..\bin\Release\net8.0-windows\win-x64\publish\Microsoft.Data.SqlClient.SNI.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+	 <File Source="..\bin\Release\net8.0-windows\win-x64\publish\PenImc_cor3.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+	 <File Source="..\bin\Release\net8.0-windows\win-x64\publish\PresentationNative_cor3.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+	 <File Source="..\bin\Release\net8.0-windows\win-x64\publish\vcruntime140_cor3.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+	 <File Source="..\bin\Release\net8.0-windows\win-x64\publish\wpfgfx_cor3.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="DesktopShortcut">
+	<Shortcut Id="DesktopShortcut"
+	    Name="SeikoHelper"
+	    Description="Launch SeikoHelper"
+	    Target="[INSTALLFOLDER]SeikoHelper.exe"
+	    Directory="DesktopFolder"
+	    WorkingDirectory="INSTALLFOLDER" />
+	<RemoveFile Id="RemoveDesktopShortcut" Name="SeikoHelper.lnk" On="uninstall" Directory="DesktopFolder" />
+	    <RegistryValue Root="HKLM" Key="Software\CharlieKato\SeikoHelper" Name="installed" Type="integer" Value="1" />
+      </Component>
+
+      <Component Id="ProgramMenuShortcut"
+		Directory="ApplicationProgramsFolder">
+        <Shortcut Id="ProgramMenuShortcut"
+		  Name="SeikoHelper"
+		  Description="Launch SeikoHelper"
+		  Target="[INSTALLFOLDER]SeikoHelper.exe"
+		  WorkingDirectory="INSTALLFOLDER" />
+	<RemoveFolder Id="RemoveProgramMenuFolder"  
+		      On="uninstall" 
+		      Directory="ApplicationProgramsFolder" />
+		      <!--HKCU = per user  HKLM = per machine -->
+	<RegistryKey Root="HKCU" Key="Software\CharlieKato\SeikoHelper" >
+			    <RegistryValue Name="menu" Type="integer" Value="1" KeyPath="yes"/>
+	</RegistryKey>
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+</Wix>
