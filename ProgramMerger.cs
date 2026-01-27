@@ -270,6 +270,7 @@ namespace SeikoHelper
                             日付 = (string)reader["日付"],
                             時間 = (string)reader["時間"],
                             ポイント設定番号 = (short)reader["ポイント設定番号"],
+                            予選競技番号 = (short)reader["予選競技番号"],
                             ポイント計算 = (bool)reader["ポイント計算"],
                             競技面 = (short)reader["競技面"],
                             午前午後 = (short)reader["午前午後"],

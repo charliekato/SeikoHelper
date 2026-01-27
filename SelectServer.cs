@@ -59,6 +59,7 @@ namespace SeikoHelper
             }
             catch (Exception ex)
             {
+		MessageBox.Show("error. : " + ex.Message);
                 return false;
             }
         }

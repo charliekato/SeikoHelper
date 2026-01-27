@@ -202,7 +202,6 @@ END;";
                     string gender="";
                     string style;
                     string distance;
-                    string record;
                     string rangeName;
 
                     foreach (DataRow dr in dt.Rows)

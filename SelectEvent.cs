@@ -78,7 +78,7 @@ namespace SeikoHelper
                                 {
                                     eventDate = eventStart + "～" + eventEnd;
                                 }
-                                string showStr = Right(eventNo, 3) + "|" +
+                                string showStr = myRight(eventNo, 3) + "|" +
                                     eventName + "|" +
                                     eventVenue + "|" +
                                     eventDate;
@@ -95,7 +95,7 @@ namespace SeikoHelper
 
 
         }
-        public static string Right(string input, int length)
+        private static string myRight(string input, int length)
         {
             string head = new string(' ', length);
 
