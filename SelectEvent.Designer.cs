@@ -36,16 +36,19 @@
             // listEvent
             // 
             listEvent.FormattingEnabled = true;
-            listEvent.Location = new Point(35, 20);
+            listEvent.ItemHeight = 25;
+            listEvent.Location = new Point(27, 16);
+            listEvent.Margin = new Padding(2);
             listEvent.Name = "listEvent";
-            listEvent.Size = new Size(1697, 868);
+            listEvent.Size = new Size(1582, 679);
             listEvent.TabIndex = 0;
             // 
             // btnSelect
             // 
-            btnSelect.Location = new Point(261, 950);
+            btnSelect.Location = new Point(456, 751);
+            btnSelect.Margin = new Padding(2);
             btnSelect.Name = "btnSelect";
-            btnSelect.Size = new Size(109, 73);
+            btnSelect.Size = new Size(84, 57);
             btnSelect.TabIndex = 1;
             btnSelect.Text = "選択";
             btnSelect.UseVisualStyleBackColor = true;
@@ -53,9 +56,10 @@
             // 
             // btnQuit
             // 
-            btnQuit.Location = new Point(1330, 950);
+            btnQuit.Location = new Point(1023, 742);
+            btnQuit.Margin = new Padding(2);
             btnQuit.Name = "btnQuit";
-            btnQuit.Size = new Size(116, 73);
+            btnQuit.Size = new Size(89, 57);
             btnQuit.TabIndex = 2;
             btnQuit.Text = "終了";
             btnQuit.UseVisualStyleBackColor = true;
@@ -63,12 +67,13 @@
             // 
             // SelectEvent
             // 
-            AutoScaleDimensions = new SizeF(13F, 32F);
+            AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1886, 1083);
+            ClientSize = new Size(1633, 846);
             Controls.Add(btnQuit);
             Controls.Add(btnSelect);
             Controls.Add(listEvent);
+            Margin = new Padding(2);
             Name = "SelectEvent";
             Text = "競技選択  　　　一般社団法人 大津市水泳協会";
             ResumeLayout(false);

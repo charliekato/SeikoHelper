@@ -10,7 +10,7 @@ namespace SeikoHelper
     {
         public static string EventDate = string.Empty;
         public static string EventVenue = string.Empty;
-        static bool TrySetValue(XLWorkbook wb, string name, string value)
+        public static bool TrySetValue(XLWorkbook wb, string name, string value)
         {
             //if (wb.NamedRanges.TryGetValue(name, out var nr))
             if (wb.DefinedNames.TryGetValue(name, out var nr))
@@ -20,8 +20,26 @@ namespace SeikoHelper
             }
             return false;
         }
+        public static void SetMark(XLWorkbook wb, string name, XLColor color)
+        {
+            if (wb.DefinedNames.TryGetValue(name, out var nr))
+            {
+                var firstCell = nr.Ranges.First();
+                firstCell.Style.Fill.BackgroundColor=color;
+            }
+        }
+        public static string TryGetValue(XLWorkbook wb, string name)
+        {
+            if (wb.DefinedNames.TryGetValue(name, out var nr))
+            {
+                var firstRange = nr.Ranges.First();
+                var firstCell = firstRange.FirstCell();
+                return firstCell.GetValue<string>();
+            }
+            return "";
+        }
 
-        public static void ReadResult(string serverName, int eventNo,string templatePath, string fileName)
+        public static void CreateWinnerList(string serverName, int eventNo,string templatePath, string fileName)
         {
            
             // 保存先のフルパス（任意で変更可）
@@ -33,156 +51,8 @@ namespace SeikoHelper
             Directory.CreateDirectory(folderPath);
             string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
 
-            string query = $@"
-IF EXISTS (SELECT 1 FROM クラス WHERE 大会番号 = @eventNo)
-BEGIN
--- クラスが存在する場合
-with myresult as (
-     SELECT 
-         rank() over (partition by 記録.競技番号, 記録.新記録判定クラス ORDER BY 記録.ゴール ASC) AS 順位 ,
-      プログラム.性別コード as 性別コード ,
-        記録.新記録判定クラス , 
-        プログラム.距離コード, 
-        プログラム.種目コード, 
-        記録.ゴール, 
-        記録.新記録印刷マーク, 
-        中間新記録マーク,
-        選手.氏名 as 氏名, 
-        選手.所属名称1 as 所属 
+            string query = "select * from vランキング　where 大会番号=@eventNo and 順位=1";
 
-   from 記録 
-    INNER JOIN 選手 ON 選手.選手番号 = 記録.選手番号 
-	     and 選手.大会番号=記録.大会番号
-    inner join プログラム on プログラム.競技番号=記録.競技番号 
-         and プログラム.大会番号=記録.大会番号
- WHERE 記録.事由表示 = 0 and  記録.大会番号=   @eventNo 
-    　　and プログラム.種目コード<6 
-        and 記録.ゴール <> '' 
-        and 記録.オープン=0
-        and (プログラム.予決コード=6 or プログラム.予決コード=3) 
-       Union ALL 
-    SELECT 
-        rank() over (partition by 記録.競技番号, 記録.新記録判定クラス
-			 ORDER BY 記録.ゴール ASC) AS 順位 , 
-   プログラム.性別コード as 性別コード,     
-        記録.新記録判定クラス, 
-        プログラム.距離コード, 
-        プログラム.種目コード, 
-        記録.ゴール, 
-        記録.新記録印刷マーク,
-        中間新記録マーク,
-        concat (選手1.氏名, ' ・ ', 選手2.氏名,' ・ ',  選手3.氏名,' ・ ',  選手4.氏名 ) as 氏名,
-   リレーチーム.チーム名 as 所属
-   from 記録 
-    inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 and リレーチーム.大会番号 =記録.大会番号
-    INNER JOIN 選手 as 選手1 ON 選手1.選手番号 = 記録.第１泳者 and 選手1.大会番号=記録.大会番号
-    inner join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者 and 選手2.大会番号=記録.大会番号
-    inner join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者 and 選手3.大会番号=記録.大会番号
-    inner join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者 and 選手4.大会番号=記録.大会番号
-    inner join プログラム on プログラム.競技番号=記録.競技番号 and プログラム.大会番号=  記録.大会番号
-    WHERE 記録.事由表示 = 0 
-        and 記録.大会番号=   @eventNo 
-    　　and プログラム.種目コード>5 
-        and 記録.ゴール <> '' 
-        and 記録.オープン=0
-        and (プログラム.予決コード=6 or プログラム.予決コード=3) 
-    ) 
-    select 
- myresult.新記録判定クラス as クラス番号,
-     case myresult.性別コード　
-	  when 1 then '男子'
-	  when 2 then '女子'
-	  when 3 then '混成'
-	  when 4 then '混合'
-	  end as 性別,
-     距離.距離, 
-     種目.種目, 
-     myresult.ゴール as 記録, 
-     myresult.氏名, 
-     myresult.所属, 
-     myresult.新記録印刷マーク,
-	 myresult.中間新記録マーク
-     from myresult 
-	 inner join クラス on クラス.クラス番号=myresult.新記録判定クラス 
-	 inner join 距離 on 距離.距離コード = myresult.距離コード
-	 inner join 種目 on 種目.種目コード = myresult.種目コード
-	 where myresult.順位=1 
-	   and クラス.大会番号=@eventNo
-	 order by クラス.クラス番号,性別, myresult.種目コード, myresult.距離コード
-END	
-ELSE BEGIN
--- クラスがない場合
-with myresult as (
-     SELECT 
-         rank() over (partition by 記録.競技番号 ORDER BY 記録.ゴール ASC) AS 順位 ,
-      プログラム.性別コード as 性別コード ,
-        プログラム.距離コード, 
-        プログラム.種目コード, 
-        記録.ゴール, 
-        記録.新記録印刷マーク,
-        中間新記録マーク,
-        選手.氏名 as 氏名, 
-        選手.所属名称1 as 所属 
-
-   from 記録 
-    INNER JOIN 選手 ON 選手.選手番号 = 記録.選手番号 
-	     and 選手.大会番号=記録.大会番号
-    inner join プログラム on プログラム.競技番号=記録.競技番号 
-         and プログラム.大会番号=記録.大会番号
- WHERE 記録.事由表示 = 0 and  記録.大会番号=   @eventNo 
-    　　and プログラム.種目コード<6 --個人種目
-        and 記録.ゴール <> '' 
-        and 記録.オープン=0
-        and (プログラム.予決コード=6 or プログラム.予決コード=3) 
-       Union ALL 
-    SELECT 
-         rank() over (partition by 記録.競技番号, 記録.新記録判定クラス
-			 ORDER BY 記録.ゴール ASC) AS 順位 , 
-   プログラム.性別コード as 性別コード,
- 
-        プログラム.距離コード, 
-        プログラム.種目コード, 
-        記録.ゴール, 
-        記録.新記録印刷マーク,
-        中間新記録マーク,
-        concat (選手1.氏名, ' ・ ', 選手2.氏名,' ・ ',  選手3.氏名,' ・ ',  選手4.氏名 ) as 氏名,
-   リレーチーム.チーム名 as 所属
-   from 記録 
- 
-    inner join リレーチーム on リレーチーム.チーム番号 = 記録.選手番号 and リレーチーム.大会番号 =記録.大会番号
-    INNER JOIN 選手 as 選手1 ON 選手1.選手番号 = 記録.第１泳者 and 選手1.大会番号=記録.大会番号
-    inner join 選手 as 選手2 on 選手2.選手番号 = 記録.第２泳者 and 選手2.大会番号=記録.大会番号
-    inner join 選手 as 選手3 on 選手3.選手番号 = 記録.第３泳者 and 選手3.大会番号=記録.大会番号
-    inner join 選手 as 選手4 on 選手4.選手番号 = 記録.第４泳者 and 選手4.大会番号=記録.大会番号
-    inner join プログラム on プログラム.競技番号=記録.競技番号 and プログラム.大会番号=  記録.大会番号
-    WHERE 記録.事由表示 = 0 
-       and 記録.大会番号=   @eventNo 
-    　　and プログラム.種目コード>5 
-        and 記録.ゴール <> '' 
-        and 記録.オープン=0
-        and (プログラム.予決コード=6 or プログラム.予決コード=3) 
-    ) 
-    select 
-     0 as クラス番号, 
-     case myresult.性別コード　
-	   when 1 then '男子'
-	   when 2 then '女子'
-	   when 3 then '混成'
-	   when 4 then '混合'
-	  end as 性別,
-     距離.距離, 
-     種目.種目, 
-     myresult.ゴール as 記録, 
-     myresult.氏名, 
-     myresult.所属, 
-     myresult.新記録印刷マーク,
-	 myresult.中間新記録マーク
-     from myresult 
-	 inner join 距離 on 距離.距離コード = myresult.距離コード
-	 inner join 種目 on 種目.種目コード = myresult.種目コード
-	 where myresult.順位=1 
-	 order by 性別, myresult.種目コード, myresult.距離コード
-END;";
 
             using (var con = new SqlConnection(connectionString))
             using (var cmd = new SqlCommand(query, con))
@@ -198,31 +68,34 @@ END;";
                 // ClosedXMLでExcelファイル作成
                 using (var wb = new XLWorkbook(templatePath))
                 {
-                    int classNo = 0;
-                    string gender="";
-                    string style;
-                    string distance;
-                    string rangeName;
 
                     foreach (DataRow dr in dt.Rows)
                     {
-                        classNo = Convert.ToInt32(dr["クラス番号"] );
-                        gender = (string)dr["性別"];
-                                            style = (string)dr["種目"];
-                        distance = (string)dr["距離"];
+                        int classNo = Convert.ToInt32(dr["新記録判定クラス"] );
                         
-                        rangeName=gender +classNo+"_"+ distance.Trim() +"_"+ style;
-                        TrySetValue(wb, rangeName+"Time",(string)dr["記録"]);
-                        string nameString = ((string)dr["氏名"]).Replace(" ・ ", Environment.NewLine);
+                        string gender = Convert.ToString(dr["性別"]);
+                        string style = Convert.ToString(dr["種目コード"]);
+                        string distance = Convert.ToString(dr["距離コード"]);
+                        
+                        string rangeName=gender +classNo+"_"+ distance +"_"+ style;
+                        TrySetValue(wb, rangeName+"Time",(string)dr["ゴール"]);
+                        string name = (string)dr["第1泳者"];
+                        string name2 = (string)dr["第2泳者"];
 
-                        TrySetValue(wb, rangeName + "Name", nameString);
+                        if (name2 != "")
+                        {
+                            name += "\n" + name2;
+                            name += "\n" + (string)dr["第3泳者"];
+                            name += "\n" + (string)dr["第4泳者"];
+                        }
+                        TrySetValue(wb, rangeName + "Name", name);
                         TrySetValue(wb, rangeName + "Team", (string)dr["所属"]);
 
                         string recordMark = (string)dr["新記録印刷マーク"];
                         if ((string)dr["中間新記録マーク"]!="") { 
                             recordMark += "中間 : " + (string)dr["中間新記録マーク"];
                         }
-                        TrySetValue(wb, rangeName + "GR", (string)dr["新記録印刷マーク"]);
+                        TrySetValue(wb, rangeName + "GR", ((string)dr["新記録印刷マーク"]).Trim());
                     }
                     TrySetValue(wb, "大会名",GlobalV.EventName+"優勝者リスト");
                     TrySetValue(wb, "開催地", EventVenue);

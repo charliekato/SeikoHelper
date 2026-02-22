@@ -36,16 +36,16 @@
             rdbTateMochi = new RadioButton();
             labelWinnerList = new Label();
             lblExtractNewRecord = new Label();
-            labelNewRecordSet = new Label();
             SuspendLayout();
             // 
             // labelMenu
             // 
             labelMenu.AutoSize = true;
             labelMenu.Font = new Font("Yu Gothic UI", 16.2F, FontStyle.Bold, GraphicsUnit.Point, 128);
-            labelMenu.Location = new Point(348, 9);
+            labelMenu.Location = new Point(435, 11);
+            labelMenu.Margin = new Padding(4, 0, 4, 0);
             labelMenu.Name = "labelMenu";
-            labelMenu.Size = new Size(90, 38);
+            labelMenu.Size = new Size(107, 45);
             labelMenu.TabIndex = 0;
             labelMenu.Text = "Menu";
             // 
@@ -53,9 +53,10 @@
             // 
             labelEntryList.AutoSize = true;
             labelEntryList.Font = new Font("Yu Gothic UI", 12F);
-            labelEntryList.Location = new Point(82, 152);
+            labelEntryList.Location = new Point(102, 190);
+            labelEntryList.Margin = new Padding(4, 0, 4, 0);
             labelEntryList.Name = "labelEntryList";
-            labelEntryList.Size = new Size(166, 28);
+            labelEntryList.Size = new Size(199, 32);
             labelEntryList.TabIndex = 4;
             labelEntryList.Text = "エントリーリスト作成";
             labelEntryList.Click += labelEntryList_Click;
@@ -64,9 +65,10 @@
             // 
             lblGoDoCreater.AutoSize = true;
             lblGoDoCreater.Font = new Font("Yu Gothic UI", 12F);
-            lblGoDoCreater.Location = new Point(82, 76);
+            lblGoDoCreater.Location = new Point(102, 95);
+            lblGoDoCreater.Margin = new Padding(4, 0, 4, 0);
             lblGoDoCreater.Name = "lblGoDoCreater";
-            lblGoDoCreater.Size = new Size(137, 28);
+            lblGoDoCreater.Size = new Size(163, 32);
             lblGoDoCreater.TabIndex = 6;
             lblGoDoCreater.Text = "合同クリエーター";
             lblGoDoCreater.Click += GodoCreaterClick;
@@ -75,9 +77,10 @@
             // 
             lblSCLASS.AutoSize = true;
             lblSCLASS.Font = new Font("Yu Gothic UI", 12F);
-            lblSCLASS.Location = new Point(82, 444);
+            lblSCLASS.Location = new Point(102, 555);
+            lblSCLASS.Margin = new Padding(4, 0, 4, 0);
             lblSCLASS.Name = "lblSCLASS";
-            lblSCLASS.Size = new Size(216, 28);
+            lblSCLASS.Size = new Size(259, 32);
             lblSCLASS.TabIndex = 8;
             lblSCLASS.Text = "標準記録判定クラス追加";
             lblSCLASS.Click += lblSCLASS_Click;
@@ -85,9 +88,10 @@
             // rdbYokoMochi
             // 
             rdbYokoMochi.AutoSize = true;
-            rdbYokoMochi.Location = new Point(168, 191);
+            rdbYokoMochi.Location = new Point(210, 239);
+            rdbYokoMochi.Margin = new Padding(4);
             rdbYokoMochi.Name = "rdbYokoMochi";
-            rdbYokoMochi.Size = new Size(71, 24);
+            rdbYokoMochi.Size = new Size(86, 29);
             rdbYokoMochi.TabIndex = 9;
             rdbYokoMochi.TabStop = true;
             rdbYokoMochi.Text = "横持ち";
@@ -96,9 +100,10 @@
             // rdbTateMochi
             // 
             rdbTateMochi.AutoSize = true;
-            rdbTateMochi.Location = new Point(299, 190);
+            rdbTateMochi.Location = new Point(374, 238);
+            rdbTateMochi.Margin = new Padding(4);
             rdbTateMochi.Name = "rdbTateMochi";
-            rdbTateMochi.Size = new Size(71, 24);
+            rdbTateMochi.Size = new Size(86, 29);
             rdbTateMochi.TabIndex = 10;
             rdbTateMochi.TabStop = true;
             rdbTateMochi.Text = "縦持ち";
@@ -108,9 +113,10 @@
             // 
             labelWinnerList.AutoSize = true;
             labelWinnerList.Font = new Font("Yu Gothic UI", 12F);
-            labelWinnerList.Location = new Point(82, 249);
+            labelWinnerList.Location = new Point(102, 311);
+            labelWinnerList.Margin = new Padding(4, 0, 4, 0);
             labelWinnerList.Name = "labelWinnerList";
-            labelWinnerList.Size = new Size(155, 28);
+            labelWinnerList.Size = new Size(186, 32);
             labelWinnerList.TabIndex = 11;
             labelWinnerList.Text = "優勝者リスト作成";
             labelWinnerList.Click += labelWinnerList_Click;
@@ -119,30 +125,19 @@
             // 
             lblExtractNewRecord.AutoSize = true;
             lblExtractNewRecord.Font = new Font("Yu Gothic UI", 12F);
-            lblExtractNewRecord.Location = new Point(82, 318);
+            lblExtractNewRecord.Location = new Point(102, 393);
+            lblExtractNewRecord.Margin = new Padding(4, 0, 4, 0);
             lblExtractNewRecord.Name = "lblExtractNewRecord";
-            lblExtractNewRecord.Size = new Size(112, 28);
+            lblExtractNewRecord.Size = new Size(134, 32);
             lblExtractNewRecord.TabIndex = 7;
-            lblExtractNewRecord.Text = "新記録抽出";
+            lblExtractNewRecord.Text = "新記録管理";
             lblExtractNewRecord.Click += lblExtractNewRecord_Click;
-            // 
-            // labelNewRecordSet
-            // 
-            labelNewRecordSet.AutoSize = true;
-            labelNewRecordSet.Font = new Font("Yu Gothic UI", 12F);
-            labelNewRecordSet.Location = new Point(82, 380);
-            labelNewRecordSet.Name = "labelNewRecordSet";
-            labelNewRecordSet.Size = new Size(132, 28);
-            labelNewRecordSet.TabIndex = 12;
-            labelNewRecordSet.Text = "発生大会記録";
-            labelNewRecordSet.Click += labelNewRecordSet_Click;
             // 
             // MainForm
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(812, 528);
-            Controls.Add(labelNewRecordSet);
+            ClientSize = new Size(1015, 660);
             Controls.Add(labelWinnerList);
             Controls.Add(rdbTateMochi);
             Controls.Add(rdbYokoMochi);
@@ -151,6 +146,7 @@
             Controls.Add(lblGoDoCreater);
             Controls.Add(labelEntryList);
             Controls.Add(labelMenu);
+            Margin = new Padding(4);
             Name = "MainForm";
             Text = "MainMenu";
             ResumeLayout(false);
@@ -167,6 +163,5 @@
         private RadioButton rdbTateMochi;
         private Label labelWinnerList;
         private Label lblExtractNewRecord;
-        private Label labelNewRecordSet;
     }
 }

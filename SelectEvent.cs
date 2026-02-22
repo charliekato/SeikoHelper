@@ -59,17 +59,12 @@ namespace SeikoHelper
                         {
                             while (reader.Read())
                             {
-                                string eventNo;
-                                string eventName;
-                                string eventDate;
-                                string eventStart;
-                                string eventEnd;
-                                string eventVenue;
-                                eventNo = "" + reader["大会番号"];
-                                eventName = "" + reader["大会名1"];
-                                eventVenue = "" + reader["開催地"];
-                                eventStart = "" + reader["始期間"];
-                                eventEnd = "" + reader["終期間"];
+                                string eventNo =  Convert.ToString(reader["大会番号"]);
+                                string eventName = (string) reader["大会名1"];
+                                string eventVenue = (string) reader["開催地"];
+                                string eventStart = (string) reader["始期間"];
+                                string eventEnd = (string) reader["終期間"];
+                                string eventDate = "";
                                 if (eventStart == eventEnd)
                                 {
                                     eventDate = Space(6) + eventStart + Space(6);

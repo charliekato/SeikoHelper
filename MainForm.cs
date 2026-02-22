@@ -17,35 +17,11 @@ namespace SeikoHelper
 
         private void lblExtractNewRecord_Click(object sender, EventArgs e)
         {
-            //NewRecordExporter newRecordExporter = new NewRecordExporter();
-            NewRecordExporter.UpdateGameRecord();
-            NewRecordExporter.ExeExport();
-            Cursor previousCursor = Cursor.Current;
-
-            try
-            {
-                // 処理中カーソル（WaitCursor）を設定
-                SaveFileDialog sfd = new SaveFileDialog();
-                sfd.Title = "保存先のファイルを選択してください";
-                sfd.Filter = "エクセルファイル (*.xlsx)|*.xlsx|すべてのファイル (*.*)|*.*";
-                sfd.DefaultExt = "xlsx";
-
-                Cursor.Current = Cursors.WaitCursor;
-                //EntryList.CreateEntryList(textBoxEntryList.Text);
-                if (sfd.ShowDialog() == DialogResult.OK)
-                {
-                    string filePath = sfd.FileName;
-                    NewRecordExporter.UpdateDB(GlobalV.ServerName, GlobalV.EventNo, filePath);
-                }
-            }
-            finally
-            {
-                // カーソルを元に戻す
-                Cursor.Current = previousCursor;
-            }
-
+            NewRecordManager newRecordManager = new NewRecordManager(); 
+            newRecordManager.Show();
         }
 
+        
         private void labelEntryList_Click(object sender, EventArgs e)
         {
             Cursor previousCursor = Cursor.Current;
@@ -84,6 +60,7 @@ namespace SeikoHelper
         {
             Cursor previousCursor = Cursor.Current;
             // テンプレート選択
+            MessageBox.Show("次の画面でテンプレート Excel を選択してください。", "テンプレート選択", MessageBoxButtons.OK, MessageBoxIcon.Information);
             string templatePath;
             using (var ofd = new OpenFileDialog())
             {
@@ -108,7 +85,7 @@ namespace SeikoHelper
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = sfd.FileName;
-                    WinnerList.ReadResult(GlobalV.ServerName, GlobalV.EventNo,templatePath, filePath);
+                    WinnerList.CreateWinnerList(GlobalV.ServerName, GlobalV.EventNo,templatePath, filePath);
                 }
             }
             finally
@@ -119,31 +96,5 @@ namespace SeikoHelper
 
         }
 
-        private void labelNewRecordSet_Click(object sender, EventArgs e)
-        {
-            Cursor previousCursor = Cursor.Current;
-
-            try
-            {
-                // 処理中カーソル（WaitCursor）を設定
-                SaveFileDialog sfd = new SaveFileDialog();
-                sfd.Title = "保存先のファイルを選択してください";
-                sfd.Filter = "エクセルファイル (*.xlsx)|*.xlsx|すべてのファイル (*.*)|*.*";
-                sfd.DefaultExt = "xlsx";
-
-                Cursor.Current = Cursors.WaitCursor;
-                //EntryList.CreateEntryList(textBoxEntryList.Text);
-                if (sfd.ShowDialog() == DialogResult.OK)
-                {
-                    string filePath = sfd.FileName;
-                    NewRecordSet.CreateNewRecordEstablished(filePath);
-                }
-            }
-            finally
-            {
-                // カーソルを元に戻す
-                Cursor.Current = previousCursor;
-            }
-        }
     }
 }

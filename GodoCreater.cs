@@ -300,6 +300,11 @@ namespace SeikoHelper
             int kumi = 1;
             do
             {
+                if (prgNo==34 )
+                {
+                    MessageBox.Show("debug");
+
+                }
                 if (GlobalV.TID[GetRaceNo(prgNo, kumi)] == 0)
                     CheckIfTogetherable(prgNo, kumi);
             } while (GetNextRace(ref prgNo, ref kumi));
@@ -859,6 +864,7 @@ namespace SeikoHelper
             int[] secondOne = new int[11];
             int[] thirdOne = new int[11];
             int[] lastOne = new int[11];
+            int[] yosenTime = new int[11];  /* feb 2026 addition */
             int[] firstOneClassNo = new int[11];
             int[] firstOneCertNo = new int[11];
             string[] goal = new string[11];
@@ -894,6 +900,7 @@ namespace SeikoHelper
                             firstOneClassNo[lane] = Convert.ToInt32(reader["第一泳者新記録判定クラス"]);
                             firstOneCertNo[lane] = Convert.ToInt32(reader["第一泳者標準記録判定クラス"]);
                             goal[lane] = (string) (reader["ゴール"]);
+                            yosenTime[lane] = Convert.ToInt32(reader["予選タイム"]); /* feb 2026 addition */
                             if (startLane == 0)
                                 startLane = lane;
 
@@ -912,6 +919,7 @@ namespace SeikoHelper
                          第３泳者=@thirdOne , 第４泳者 = @lastOne ,
                          第一泳者新記録判定クラス=@firstOneClassNo ,
                          第一泳者標準記録判定クラス=@firstOneCertNo ,
+                         予選タイム=@yosenTime ,  /* feb 2026 addition */
                          ゴール=@goal 
                       where 大会番号=@eventNo and 競技番号=@uid and 組=@tokumi and 水路=@laneNo";
 
@@ -933,6 +941,7 @@ namespace SeikoHelper
                         myCommand.Parameters.AddWithValue("@tokumi", toKumi);
                         myCommand.Parameters.AddWithValue("@laneNo", lane);
                         myCommand.Parameters.AddWithValue("@goal", goal[lane]);
+                        myCommand.Parameters.AddWithValue("@yosenTime", yosenTime[lane]); /* feb 2026 addition */
                         myCommand.ExecuteNonQuery();
                     }
                 }
