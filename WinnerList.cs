@@ -1,11 +1,52 @@
+using ClosedXML.Excel;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Data;
-using Microsoft.Data.SqlClient;
-using ClosedXML.Excel;
 using System.Diagnostics;
+using System.IO.Compression;
+using System.Xml.Linq;
 
 namespace SeikoHelper
 {
+    public static class ExcelPhoneticCleaner
+    {
+        public static void RemovePhoneticRuns(string filePath)
+        {
+            using (var archive = ZipFile.Open(filePath, ZipArchiveMode.Update))
+            {
+                var entry = archive.GetEntry("xl/sharedStrings.xml");
+                if (entry == null)
+                    return;
+
+                XDocument doc;
+                using (var stream = entry.Open())
+                {
+                    doc = XDocument.Load(stream);
+                }
+
+                XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+                // <rPh> 削除
+                var rPhNodes = doc.Descendants(ns + "rPh").ToList();
+                foreach (var node in rPhNodes)
+                    node.Remove();
+
+                // <phoneticPr> 削除
+                var phoneticPrNodes = doc.Descendants(ns + "phoneticPr").ToList();
+                foreach (var node in phoneticPrNodes)
+                    node.Remove();
+
+                // 上書き保存
+                entry.Delete();
+                var newEntry = archive.CreateEntry("xl/sharedStrings.xml");
+
+                using (var stream = newEntry.Open())
+                {
+                    doc.Save(stream);
+                }
+            }
+        }
+        }
     class WinnerList
     {
         public static string EventDate = string.Empty;
@@ -39,6 +80,8 @@ namespace SeikoHelper
             return "";
         }
 
+
+        
         public static void CreateWinnerList(string serverName, int eventNo,string templatePath, string fileName)
         {
            
@@ -64,8 +107,10 @@ namespace SeikoHelper
                 {
                     dt.Load(reader);
                 }
-
                 // ClosedXMLでExcelファイル作成
+
+                ExcelPhoneticCleaner.RemovePhoneticRuns(templatePath);
+
                 using (var wb = new XLWorkbook(templatePath))
                 {
 
@@ -73,9 +118,9 @@ namespace SeikoHelper
                     {
                         int classNo = Convert.ToInt32(dr["新記録判定クラス"] );
                         
-                        string gender = Convert.ToString(dr["性別"]);
-                        string style = Convert.ToString(dr["種目コード"]);
-                        string distance = Convert.ToString(dr["距離コード"]);
+                        string gender = Convert.ToString(dr["性別"]) ?? "";
+                        string style = Convert.ToString(dr["種目コード"]) ?? "";
+                        string distance = Convert.ToString(dr["距離コード"]) ?? "";
                         
                         string rangeName=gender +classNo+"_"+ distance +"_"+ style;
                         TrySetValue(wb, rangeName+"Time",(string)dr["ゴール"]);
@@ -97,9 +142,9 @@ namespace SeikoHelper
                         }
                         TrySetValue(wb, rangeName + "GR", ((string)dr["新記録印刷マーク"]).Trim());
                     }
-                    TrySetValue(wb, "大会名",GlobalV.EventName+"優勝者リスト");
-                    TrySetValue(wb, "開催地", EventVenue);
-                    TrySetValue(wb, "開催日", EventDate.Trim());
+                    TrySetValue(wb, "eventName",GlobalV.EventName+"優勝者リスト");
+                    TrySetValue(wb, "eventVenue", EventVenue);
+                    TrySetValue(wb, "eventDate", EventDate.Trim());
 
                     // ファイル保存
                     wb.SaveAs(fullPath);

@@ -68,19 +68,16 @@ namespace SeikoHelper
             }
         }
         private static void InsertGameRecord(int genderCode, int classNo, int distanceCode,
-            int strokeCode, string GR,string name1, string name2, string name3, string name4, string shozoku,  string hizuke )
+            int strokeCode, string GR,string swimmeRname,  string shozoku, string eventName=""  )
         {
             int tournamentRecordNo = GetRecordNameNumber();
-            string name = name1;
-            if (strokeCode>5) { 
-                name += "・"+name2 + "・"+name3+"・"+name4;
-            }
+
             string myQuery = @" 
-                     insert into 新記録bk ( 大会番号, 性別コード, 記録区分番号,
-                     記録名称番号, 種目コード, 距離コード, 記録, 日付,保持者番号, 記録保持者, 
+                     insert into 新記録 ( 大会番号, 性別コード, 記録区分番号,
+                     記録名称番号, 種目コード, 距離コード, 記録, 保持者番号, 記録保持者, 
                     所属,競技会名, 会場) values
                      ( @eventNo, @gender, @classNo, @recordNo, @strokeCode, 
-                       @distanceCode,@GR,@hizuke,@holderNo, @name,@shozoku,@eventName,@eventVenue 
+                       @distanceCode,@timeValue,@holderNo, @name,@shozoku,@eventName,@eventVenue 
                       )"; 
             
             string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
@@ -96,12 +93,51 @@ namespace SeikoHelper
                     command.Parameters.AddWithValue("@recordNo", SqlDbType.Int).Value = tournamentRecordNo;
                     command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value = strokeCode;
                     command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value = distanceCode;
-                    command.Parameters.Add("@GR", SqlDbType.NVarChar,8).Value = GR;
-                    command.Parameters.Add("@hizuke", SqlDbType.NVarChar,10).Value = hizuke;
+                    command.Parameters.Add("@timeValue", SqlDbType.NVarChar,8).Value = GR;
+                    command.Parameters.AddWithValue("@holderNo", SqlDbType.Int).Value = 0;
+                    command.Parameters.AddWithValue("@name", swimmeRname);
+                    command.Parameters.AddWithValue("@shozoku", shozoku);
+                    command.Parameters.Add("@eventName", SqlDbType.NVarChar, 50).Value = eventName;
+                    command.Parameters.Add("@eventVenue", SqlDbType.NVarChar,30).Value=WinnerList.EventVenue;
+
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+        private static void InsertGameRecord(int genderCode, int classNo, int distanceCode,
+            int strokeCode, string GR,string name1, string name2, string name3, string name4, string shozoku  )
+        {
+            int tournamentRecordNo = GetRecordNameNumber();
+            string name = name1;
+            if (strokeCode>5) { 
+                name += "・"+name2 + "・"+name3+"・"+name4;
+            }
+            string myQuery = @" 
+                     insert into 新記録bk ( 大会番号, 性別コード, 記録区分番号,
+                     記録名称番号, 種目コード, 距離コード, 記録, 日付,保持者番号, 記録保持者, 
+                    所属,競技会名, 会場) values
+                     ( @eventNo, @gender, @classNo, @recordNo, @strokeCode, 
+                       @distanceCode,@timeValue,@hizuke,@holderNo, @name,@shozoku,@eventName,@eventVenue)"; 
+            
+            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(myQuery, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@gender", SqlDbType.Int).Value = genderCode;
+                    command.Parameters.AddWithValue("@classNo", SqlDbType.Int).Value = classNo;
+                    command.Parameters.AddWithValue("@recordNo", SqlDbType.Int).Value = tournamentRecordNo;
+                    command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value = strokeCode;
+                    command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value = distanceCode;
+                    command.Parameters.Add("@timeValue", SqlDbType.NVarChar,8).Value = GR;
+                    command.Parameters.Add("@hizuke", SqlDbType.NVarChar,10).Value = "";
                     command.Parameters.AddWithValue("@holderNo", SqlDbType.Int).Value = 0;
                     command.Parameters.AddWithValue("@name", name);
                     command.Parameters.AddWithValue("@shozoku", shozoku);
-                    command.Parameters.Add("@eventName", SqlDbType.NVarChar,50).Value =GlobalV.EventName;
+                    command.Parameters.Add("@eventName", SqlDbType.NVarChar,50).Value =NewRecordManager.thisYear;
                     command.Parameters.Add("@eventVenue", SqlDbType.NVarChar,30).Value=WinnerList.EventVenue;
 
                     command.ExecuteNonQuery();
@@ -109,10 +145,11 @@ namespace SeikoHelper
             }
         }
         private static void UpdateGameRecord(int genderCode, int classNo, int distanceCode,
-            int strokeCode, string GR, string swimmer1,string swimmer2, string swimmer3, string swimmer4, string shozoku, string hizuke)
+            int strokeCode, string GR, string swimmer1,string swimmer2, string swimmer3, 
+            string swimmer4, string shozoku)
         {
             string myQuery = @" 
-                update 新記録bk set 記録=@GR , 記録保持者=@Name, 所属=@Shozoku, 日付=@Date,
+                update 新記録bk set 記録=@timeValue , 記録保持者=@Name, 所属=@Shozoku,
                        競技会名=@eventName, 会場=@eventVenue
                        where 大会番号=@eventNo
                        and 性別コード=@gender
@@ -137,11 +174,10 @@ namespace SeikoHelper
                     command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value =strokeCode;
                     command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value =distanceCode;
                     command.Parameters.AddWithValue("@classNo", SqlDbType.Int).Value =classNo;
-                    command.Parameters.Add("@GR", SqlDbType.VarChar,8).Value= GR;
+                    command.Parameters.Add("@timeValue", SqlDbType.VarChar,8).Value= GR;
                     command.Parameters.Add("@Name", SqlDbType.VarChar,30).Value=(object)name ?? DBNull.Value; 
                     command.Parameters.Add("@shozoku",SqlDbType.VarChar,16).Value=(object)shozoku ?? DBNull.Value; 
-                    command.Parameters.Add("@Date",SqlDbType.VarChar,10).Value=  (object)hizuke.Trim() ?? DBNull.Value;
-                    command.Parameters.Add("@eventName", SqlDbType.NVarChar, 50).Value = GlobalV.EventName;
+                    command.Parameters.Add("@eventName", SqlDbType.NVarChar, 50).Value = NewRecordManager.thisYear;
                     command.Parameters.Add("@eventVenue", SqlDbType.NVarChar, 30).Value = WinnerList.EventVenue;
                     command.ExecuteNonQuery();
                 }
@@ -161,7 +197,7 @@ namespace SeikoHelper
             using ( SqlConnection connection=new SqlConnection(connectionString))
             {
 
-               connection.Open();
+                connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
                 {
                     command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
@@ -170,17 +206,15 @@ namespace SeikoHelper
                     command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value = distanceCode;
                     command.Parameters.AddWithValue("@classNo", SqlDbType.Int).Value = classNo;
                     object reader = command.ExecuteScalar();
-                    if (reader != null) { 
-                        
-                            GR = (string)reader.ToString();
-                            if (GR == "") GR = "99:99.99";
-                    }
-                    else GR = "";
+                    GR = if_not_null_string(reader) ;
                 } 
             }
-            
-            return GR;
-
+            return GR ;
+        }
+        public static string if_not_null_string(object dr)
+        {
+            if (dr == DBNull.Value) return "";
+            return (string)dr;
         }
 
         public static string ConvToString(object value)
@@ -214,6 +248,7 @@ namespace SeikoHelper
                 }
                 try
                 {
+                    ExcelPhoneticCleaner.RemovePhoneticRuns(excelFile);
                     using (var wb = new XLWorkbook(excelFile))
                     {
                         foreach (DataRow dr in dt.Rows)
@@ -221,8 +256,8 @@ namespace SeikoHelper
                             int classNo = Convert.ToInt32(dr["記録区分番号"]);
                             int gender = Convert.ToInt32(dr["性別コード"]);
                             string genderName = (string)dr["性別"];
-                            string stroke = Convert.ToString(dr["種目コード"]);
-                            string distance = Convert.ToString(dr["距離コード"]);
+                            string stroke = Convert.ToString(dr["種目コード"]) ?? "";
+                            string distance = Convert.ToString(dr["距離コード"]) ?? "";
                             string strokeStr = (string)dr["種目"];
                             string distanceStr = (string)dr["距離"];
 
@@ -251,7 +286,7 @@ namespace SeikoHelper
         }
         public static void UpdateExcel()
         {
-            Cursor previousCursor = Cursor.Current;
+            Cursor? previousCursor = Cursor.Current;
             MessageBox.Show("次の画面でテンプレートExcel(前回大会後の大会記録の入ったもの)を選択してください。", 
                 "テンプレート選択", MessageBoxButtons.OK, MessageBoxIcon.Information);
             // テンプレート選択
@@ -269,12 +304,12 @@ namespace SeikoHelper
                         return;
                     templatePath = ofd.FileName;
                 }
-                // 処理中カーソル（WaitCursor）を設定
                 SaveFileDialog sfd = new SaveFileDialog();
                 sfd.Title = "保存先のファイルを選択してください";
                 sfd.Filter = "エクセルファイル (*.xlsx)|*.xlsx|すべてのファイル (*.*)|*.*";
                 sfd.DefaultExt = "xlsx";
 
+                // 処理中カーソル（WaitCursor）を設定
                 Cursor.Current = Cursors.WaitCursor;
                 //EntryList.CreateEntryList(textBoxEntryList.Text);
                 if (sfd.ShowDialog() == DialogResult.OK)
@@ -314,37 +349,36 @@ namespace SeikoHelper
 
                 try
                 {
+                    ExcelPhoneticCleaner.RemovePhoneticRuns(templatePath);
                     // ClosedXMLでExcelファイル作成
                     using (var wb = new XLWorkbook(templatePath))
                     {
                         foreach (DataRow dr in dt.Rows)
                         {
-                            string classNo = Convert.ToString(dr["記録区分番号"]);
+                            string classNo = Convert.ToString(dr["記録区分番号"]) ?? "" ;  
                             int gender = Convert.ToInt32(dr["性別コード"]);
-                            string stroke = Convert.ToString(dr["種目コード"]);
-                            string distance = Convert.ToString(dr["距離コード"]);
+                            string stroke = Convert.ToString(dr["種目コード"]) ?? "";
+                            string distance = Convert.ToString(dr["距離コード"]) ?? "";
                             
 
                             string rangeName = genderStr[gender - 1] + classNo + "_" + distance + "_" + stroke;
                             string oldGR = WinnerList.TryGetValue(wb, rangeName + "Time");
                             if ((TimeStr2Int(oldGR) > TimeStr2Int((string)dr["記録"])) || oldGR == "")
                             {
+                                string nameStr= Convert.ToString(dr["記録保持者"]) ?? "";
+                                
 
                                 WinnerList.TrySetValue(wb, rangeName + "Time", (string)dr["記録"]);
                                 WinnerList.SetMark(wb, rangeName + "Time", XLColor.Yellow);
-                                WinnerList.TrySetValue(wb, rangeName + "Name", Convert.ToString(dr["記録保持者"]) ?? "");
+                                WinnerList.TrySetValue(wb, rangeName + "Name", nameStr.Replace("・","\n"));
                                 WinnerList.SetMark(wb, rangeName + "Name", XLColor.Yellow);
                                 WinnerList.TrySetValue(wb, rangeName + "Team", (string)dr["所属"]);
                                 WinnerList.SetMark(wb, rangeName + "Team", XLColor.Yellow);
-                                string hizuke = (string)dr["日付"];
 
-                                if (hizuke.Length>3)
-                                WinnerList.TrySetValue(wb, rangeName + "GR", hizuke.Substring(2, 2));
-                                else 
-                                    WinnerList.TrySetValue(wb, rangeName + "GR", hizuke);
-                                WinnerList.SetMark(wb, rangeName + "GR", XLColor.Yellow);
+                                WinnerList.TrySetValue(wb, rangeName + "GR", NewRecordManager.thisYear);
                             }
                         }
+                        WinnerList.TrySetValue(wb, "eventDate", WinnerList.EventDate+"現在");
                         // ファイル保存
                         wb.SaveAs(filePath);
                         var result = MessageBox.Show(
@@ -384,7 +418,7 @@ namespace SeikoHelper
             }
             catch (SqlException ex)
             {
-               // MessageBox.Show("バックアップテーブルの削除中にエラーが発生しました: " + ex.Message);
+                MessageBox.Show("バックアップテーブルの削除中にエラーが発生しました: " + ex.Message);
             }
         }
         public static void InsertGameRecord()
@@ -420,7 +454,7 @@ namespace SeikoHelper
                             string gameRecord = GetGameRecord(genderCode, classNo, distanceCode, strokeCode);
                             if (gameRecord == "")
                                 InsertGameRecord(genderCode, classNo, distanceCode, strokeCode,
-                                    myStrTime, swimmer1, swimmer2, swimmer3, swimmer4, shozoku, hizuke);
+                                    myStrTime, swimmer1, swimmer2, swimmer3, swimmer4, shozoku);
                         }
                     }
                 }
@@ -459,12 +493,93 @@ namespace SeikoHelper
                             if (mytime < thisGR)
                             {
                                 UpdateGameRecord(genderCode, classNo, distanceCode2, strokeCode2,
-                                    myStrTime, swimmer1, "", "", "", shozoku, hizuke);
+                                    myStrTime, swimmer1, "", "", "", shozoku);
                             }
                         }
                     }
                 }
             }
+        }
+        private static int GetMaxClassNo()
+        {
+            string query = "select MAX(クラス番号) from クラス where 大会番号=@eventNo";
+
+            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    object reader = command.ExecuteScalar();
+                    if (reader != null)
+                    {
+                        return Convert.ToInt32(reader.ToString());
+                    }
+                    else return 0;
+                }
+            }
+
+        }
+        public static void Excel2DB()
+        {
+            MessageBox.Show("次の画面で大会記録の入ったExcel File を選択してください。", 
+                "Excel File 選択", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Cursor.Current = Cursors.WaitCursor;
+            string excelFile;
+            using (var ofd = new OpenFileDialog())
+            {
+                ofd.Title = " 大会記録の入ったExcel を選択";
+                ofd.Filter = "Excel Files (*.xlsx)|*.xlsx";
+
+                if (ofd.ShowDialog() != DialogResult.OK)
+                    return;
+                excelFile = ofd.FileName;
+            }
+            try
+            {
+                ExcelPhoneticCleaner.RemovePhoneticRuns(excelFile);
+                using (var wb = new XLWorkbook(excelFile))
+                {
+                    string[] gender = new string[] { "", "男子", "女子", "混成", "混合" };
+                    int classNo, distanceCode, styleCode, genderCode;
+                    for (classNo = 1; classNo <= GetMaxClassNo(); classNo++)
+                    {
+                        for (distanceCode = 1; distanceCode <= 7; distanceCode++)
+                        {
+                            for (styleCode = 1; styleCode <= 7; styleCode++)
+                            {
+                                for (genderCode = 1; genderCode <= 4; genderCode++)
+                                {
+                                    string prefix = gender[genderCode] + classNo + "_" + distanceCode + "_" + styleCode;
+                                    string timeRange = prefix + "Time";
+                                    string timeValue = Convert.ToString(WinnerList.TryGetValue(wb, timeRange));
+                                    if (timeValue != "")
+                                    {
+                                        string nameRange = prefix + "Name";
+                                        string teamRange = prefix + "Team";
+                                        string dateRange = prefix + "GR"; 
+                                        string swimmerName = WinnerList.TryGetValue(wb, nameRange);
+                                        string swimmerName2 = swimmerName.Replace("\n", "・");
+                                        string teamName = WinnerList.TryGetValue(wb, teamRange);
+                                        string dateName = WinnerList.TryGetValue(wb, dateRange);
+                                        if (ExistRecord(genderCode,classNo,distanceCode,styleCode)) 
+                                            UpdateGameRecord(genderCode, classNo, distanceCode, styleCode, timeValue, swimmerName2, teamName,dateName);
+                                        else InsertGameRecord(genderCode,classNo, distanceCode, styleCode, timeValue,swimmerName2,teamName,dateName);
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                MessageBox.Show("DB Update 終了");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Excel2DBでエラー。" + ex.Message);
+            }
+
         }
         public static void UpdateGameRecord()
         {
@@ -501,13 +616,74 @@ namespace SeikoHelper
                             if ( mytime<thisGR)
                             {
                                 UpdateGameRecord(genderCode, classNo, distanceCode, strokeCode,
-                                    myStrTime, swimmer1,swimmer2,swimmer3,swimmer4,shozoku,hizuke);
+                                        myStrTime, swimmer1, swimmer2, swimmer3, swimmer4, shozoku);
                             }
                         }
                     }
                 }
             }
         }
+        private static bool ExistRecord(int gender, int classNo, int distanceCode, int strokeCode) {
+            string query = @"select 1 from 新記録 
+                                where 記録区分番号=@classNo 
+                                  and 距離コード=@distanceCode
+                                  and 種目コード=@strokeCode
+                                  and 性別コード=@genderCode
+                                  and 大会番号=@eventNo";
+            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@genderCode", SqlDbType.Int).Value = gender;
+                    command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value = distanceCode;
+                    command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value = strokeCode;
+                    command.Parameters.AddWithValue("@classNo", SqlDbType.Int).Value = classNo;
+                    object reader = command.ExecuteScalar();
+                    if (reader != null)
+                    {
+                        return true;
+                    }
+                    else return false;
+                }
+            }
+        }
+        private static void UpdateGameRecord(int genderCode, int classNo, int distanceCode,
+            int strokeCode, string timeValue, string swimmer, string shozoku ,string eventName="") // eventNameに年度か回数をいれる。
+        {
+            string myQuery = @" 
+                update 新記録 set 記録=@timeValue , 記録保持者=@Name, 所属=@Shozoku, 
+                       競技会名=@eventName, 会場=@eventVenue
+                       where 大会番号=@eventNo
+                       and 性別コード=@gender
+                       and 記録区分番号=@classNo
+                       and 記録名称番号=1 
+                       and 種目コード=@strokeCode
+                       and 距離コード=@distanceCode";
+            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(myQuery, connection))
+                {
+                    command.CommandType = CommandType.Text; // これはあってもなくてもいいですが、明示的に指定することができます。
+                    command.Parameters.AddWithValue("@eventNo",  SqlDbType.Int).Value=GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@gender", SqlDbType.Int).Value =genderCode;
+                    command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value =strokeCode;
+                    command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value =distanceCode;
+                    command.Parameters.AddWithValue("@classNo", SqlDbType.Int).Value =classNo;
+                    command.Parameters.Add("@timeValue", SqlDbType.VarChar,8).Value= timeValue;
+                    command.Parameters.Add("@Name", SqlDbType.VarChar,30).Value=(object)swimmer ?? DBNull.Value; 
+                    command.Parameters.Add("@shozoku",SqlDbType.VarChar,16).Value=(object)shozoku ?? DBNull.Value;
+                    command.Parameters.Add("@eventName", SqlDbType.NVarChar, 50).Value = eventName;
+                    command.Parameters.Add("@eventVenue", SqlDbType.NVarChar, 30).Value = WinnerList.EventVenue;
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
         public static void ExeExport(/*object sender, EventArgs e*/)
         {
             string sql = "SELECT * FROM 新記録bk where 大会番号=@eventNo"; 

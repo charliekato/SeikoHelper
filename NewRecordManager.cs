@@ -12,6 +12,7 @@ namespace SeikoHelper
 {
     public partial class NewRecordManager : Form
     {
+        public static string thisYear { get; set; } = "";
         public NewRecordManager()
         {
             InitializeComponent();
@@ -26,7 +27,8 @@ namespace SeikoHelper
                 efd.Filter = "Excel ファイル(*.xlsx)|*.xlsx";
                 efd.FilterIndex = 1;
                 efd.RestoreDirectory = true;
-                if (efd.ShowDialog() == DialogResult.OK) {
+                if (efd.ShowDialog() == DialogResult.OK)
+                {
                     string excelFile = efd.FileName;
                     NewRecordExporter.CompareToExcel(GlobalV.ServerName, GlobalV.EventNo, excelFile);
                 }
@@ -35,7 +37,7 @@ namespace SeikoHelper
 
         private void btnGR2XLS_Click(object sender, EventArgs e)
         {
-            Cursor previousCursor = Cursor.Current;
+            Cursor? previousCursor = Cursor.Current;
 
             try
             {
@@ -61,7 +63,8 @@ namespace SeikoHelper
 
         private void btnTxtGen_Click(object sender, EventArgs e)
         {
-            NewRecordExporter.DeleteBackup(); /* text file 出力*/
+            thisYear = tbxThisYear.Text;
+            NewRecordExporter.DeleteBackup(); /* 新記録bk の削除*/
             NewRecordExporter.BackupDB();         // 新記録 table を 新記録bk にコピー
             NewRecordExporter.UpdateGameRecord(); //* 新記録bk tableを更新*/
             NewRecordExporter.UpdateGameRecord4RelayFirstSwimmer();  /* リレーの第一泳者　*/
@@ -71,7 +74,11 @@ namespace SeikoHelper
             //NewRecordExporter.DeleteBackup(); /* text file 出力*/
         }
 
-       
+        private void btnExcel2DB_Click(object sender, EventArgs e)
+        {
+            NewRecordExporter.Excel2DB();
+
+        }
     }
 }
 

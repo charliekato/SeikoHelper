@@ -32,7 +32,7 @@ namespace SeikoHelper
                 e.DrawBackground();
                 if (e.Index >= 0)
                 {
-                    string item = listEvent.Items[e.Index].ToString();
+                    string item = Convert.ToString(listEvent.Items[e.Index]) ?? ""  ;
                     string[] parts = item.Split('|'); // "|" 区切りでアイテムを分割
 
                     // カラムごとに描画
@@ -40,9 +40,9 @@ namespace SeikoHelper
                     e.Graphics.DrawString(parts[0], e.Font, Brushes.Black, x, e.Bounds.Top);
                     x += 60; // カラムの位置調整
                     e.Graphics.DrawString(parts[1], e.Font, Brushes.Black, x, e.Bounds.Top);
-                    x += 680;
+                    x += 640;
                     e.Graphics.DrawString(parts[2], e.Font, Brushes.Black, x, e.Bounds.Top);
-                    x += 550;
+                    x += 530;
                     e.Graphics.DrawString(parts[3], e.Font, Brushes.Black, x, e.Bounds.Top);
                 }
                 e.DrawFocusRectangle();

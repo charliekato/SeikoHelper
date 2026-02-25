@@ -24,7 +24,7 @@ namespace SeikoHelper
         
         private void labelEntryList_Click(object sender, EventArgs e)
         {
-            Cursor previousCursor = Cursor.Current;
+            Cursor? previousCursor = Cursor.Current;
             if (rdbTateMochi.Checked) { EntryList.tateFlag = true; }
 
             try
@@ -58,7 +58,7 @@ namespace SeikoHelper
 
         private void labelWinnerList_Click(object sender, EventArgs e)
         {
-            Cursor previousCursor = Cursor.Current;
+            Cursor? previousCursor = Cursor.Current;
             // テンプレート選択
             MessageBox.Show("次の画面でテンプレート Excel を選択してください。", "テンプレート選択", MessageBoxButtons.OK, MessageBoxIcon.Information);
             string templatePath;

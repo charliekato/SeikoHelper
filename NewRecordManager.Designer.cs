@@ -36,13 +36,18 @@
             lblTxtGen = new Label();
             btnGR2XLS = new Button();
             label4 = new Label();
+            lblUpdateXlsx = new Label();
+            tbxThisYear = new TextBox();
+            lblThisYear = new Label();
+            lblExcel2DB = new Label();
+            btnExcel2DB = new Button();
             SuspendLayout();
             // 
             // label3
             // 
             label3.AutoSize = true;
             label3.Font = new Font("Yu Gothic UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 128);
-            label3.Location = new Point(102, 181);
+            label3.Location = new Point(102, 241);
             label3.Name = "label3";
             label3.Size = new Size(179, 32);
             label3.TabIndex = 12;
@@ -52,7 +57,7 @@
             // 
             lblCompXls2DB.AutoSize = true;
             lblCompXls2DB.Font = new Font("Yu Gothic UI", 11F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            lblCompXls2DB.Location = new Point(124, 97);
+            lblCompXls2DB.Location = new Point(124, 157);
             lblCompXls2DB.Name = "lblCompXls2DB";
             lblCompXls2DB.Size = new Size(279, 30);
             lblCompXls2DB.TabIndex = 15;
@@ -61,7 +66,7 @@
             // btnCompXls2DB
             // 
             btnCompXls2DB.Font = new Font("Yu Gothic UI", 11F);
-            btnCompXls2DB.Location = new Point(444, 92);
+            btnCompXls2DB.Location = new Point(444, 152);
             btnCompXls2DB.Name = "btnCompXls2DB";
             btnCompXls2DB.Size = new Size(73, 41);
             btnCompXls2DB.TabIndex = 14;
@@ -82,7 +87,7 @@
             // btnTxtGen
             // 
             btnTxtGen.Font = new Font("Yu Gothic UI", 11F);
-            btnTxtGen.Location = new Point(444, 289);
+            btnTxtGen.Location = new Point(444, 360);
             btnTxtGen.Name = "btnTxtGen";
             btnTxtGen.Size = new Size(73, 41);
             btnTxtGen.TabIndex = 18;
@@ -94,7 +99,7 @@
             // 
             lblTxtGen.AutoSize = true;
             lblTxtGen.Font = new Font("Yu Gothic UI", 11F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            lblTxtGen.Location = new Point(124, 294);
+            lblTxtGen.Location = new Point(124, 365);
             lblTxtGen.Name = "lblTxtGen";
             lblTxtGen.Size = new Size(267, 30);
             lblTxtGen.TabIndex = 17;
@@ -103,7 +108,7 @@
             // btnGR2XLS
             // 
             btnGR2XLS.Font = new Font("Yu Gothic UI", 11F);
-            btnGR2XLS.Location = new Point(444, 227);
+            btnGR2XLS.Location = new Point(444, 287);
             btnGR2XLS.Name = "btnGR2XLS";
             btnGR2XLS.Size = new Size(73, 41);
             btnGR2XLS.TabIndex = 20;
@@ -115,17 +120,71 @@
             // 
             label4.AutoSize = true;
             label4.Font = new Font("Yu Gothic UI", 11F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            label4.Location = new Point(124, 232);
+            label4.Location = new Point(124, 292);
             label4.Name = "label4";
             label4.Size = new Size(167, 30);
             label4.TabIndex = 19;
             label4.Text = "発生新記録作成";
             // 
+            // lblUpdateXlsx
+            // 
+            lblUpdateXlsx.AutoSize = true;
+            lblUpdateXlsx.Font = new Font("Yu Gothic UI", 11F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            lblUpdateXlsx.Location = new Point(169, 395);
+            lblUpdateXlsx.Name = "lblUpdateXlsx";
+            lblUpdateXlsx.Size = new Size(233, 30);
+            lblUpdateXlsx.TabIndex = 21;
+            lblUpdateXlsx.Text = "大会記録エクセルの更新";
+            // 
+            // tbxThisYear
+            // 
+            tbxThisYear.Location = new Point(421, 482);
+            tbxThisYear.Name = "tbxThisYear";
+            tbxThisYear.Size = new Size(53, 31);
+            tbxThisYear.TabIndex = 23;
+            tbxThisYear.Text = "26";
+            // 
+            // lblThisYear
+            // 
+            lblThisYear.AutoSize = true;
+            lblThisYear.Font = new Font("Yu Gothic UI", 11F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            lblThisYear.Location = new Point(211, 481);
+            lblThisYear.Name = "lblThisYear";
+            lblThisYear.Size = new Size(191, 30);
+            lblThisYear.TabIndex = 24;
+            lblThisYear.Text = "年、または、回 ==>";
+            // 
+            // lblExcel2DB
+            // 
+            lblExcel2DB.AutoSize = true;
+            lblExcel2DB.Font = new Font("Yu Gothic UI", 11F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            lblExcel2DB.Location = new Point(124, 97);
+            lblExcel2DB.Name = "lblExcel2DB";
+            lblExcel2DB.Size = new Size(274, 30);
+            lblExcel2DB.TabIndex = 26;
+            lblExcel2DB.Text = "大会記録 excel をDB に反映";
+            // 
+            // btnExcel2DB
+            // 
+            btnExcel2DB.Font = new Font("Yu Gothic UI", 11F);
+            btnExcel2DB.Location = new Point(444, 92);
+            btnExcel2DB.Name = "btnExcel2DB";
+            btnExcel2DB.Size = new Size(73, 41);
+            btnExcel2DB.TabIndex = 25;
+            btnExcel2DB.Text = "実行";
+            btnExcel2DB.UseVisualStyleBackColor = true;
+            btnExcel2DB.Click += btnExcel2DB_Click;
+            // 
             // NewRecordManager
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(775, 627);
+            Controls.Add(lblExcel2DB);
+            Controls.Add(btnExcel2DB);
+            Controls.Add(lblThisYear);
+            Controls.Add(tbxThisYear);
+            Controls.Add(lblUpdateXlsx);
             Controls.Add(btnGR2XLS);
             Controls.Add(label4);
             Controls.Add(btnTxtGen);
@@ -142,12 +201,6 @@
 
         #endregion
 
-        private Label lblCompare;
-        private TextBox tbxExcelFile1;
-        private Label lblExcelFileName;
-        private Button btnRunCompare;
-        private Button btnSelect2;
-        private TextBox tbxExcelFile2;
         private Label label3;
         private Label lblCompXls2DB;
         private Button btnCompXls2DB;
@@ -156,5 +209,10 @@
         private Label lblTxtGen;
         private Button btnGR2XLS;
         private Label label4;
+        private Label lblUpdateXlsx;
+        private TextBox tbxThisYear;
+        private Label lblThisYear;
+        private Label lblExcel2DB;
+        private Button btnExcel2DB;
     }
 }

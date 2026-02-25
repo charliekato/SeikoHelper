@@ -23,15 +23,15 @@ namespace SeikoHelper
             public int 距離コード;
             public int 性別コード;
             public int 予決コード;
-            public string 日付;
-            public string 時間;
+            public required string 日付;
+            public required string 時間;
             public int ポイント設定番号;
             public int 予選競技番号;
             public bool ポイント計算;
             public int 競技面;
             public int 午前午後;
             public int 進行フラグ;
-            public string 備考;
+            public required string 備考;
         }
         private class RecordRecord
         {
@@ -40,51 +40,51 @@ namespace SeikoHelper
             public int 組;
             public int 水路;
             public int 事由入力ステータス;
-            public string ゴール;
-            public string 中間記録;
+            public required string ゴール;
+            public required string 中間記録;
             public int 選手番号;
             public int 第１泳者;
             public int 第２泳者;
             public int 第３泳者;
             public int 第４泳者;
-            public string 新記録印刷マーク;
-            public string 新記録電光マーク;
-            public string 棄権印刷マーク;
-            public string 棄権電光マーク;
-            public string 中間新記録マーク;
-            public string エントリータイム;
-            public string 予選タイム;
+            public required string 新記録印刷マーク;
+            public required string 新記録電光マーク;
+            public required string 棄権印刷マーク;
+            public required string 棄権電光マーク;
+            public required string 中間新記録マーク;
+            public required string エントリータイム;
+            public required string 予選タイム;
             public int 失格泳者;
-            public string 引継タイム１;
-            public string 引継タイム２;
-            public string 引継タイム３;
+            public required string 引継タイム１;
+            public required string 引継タイム２;
+            public required string 引継タイム３;
             public int 新記録判定クラス;
             public int 標準記録判定クラス;
-            public string 予備;
-            public string リアクション;
-            public string 引継ぎ１;
-            public string 引継ぎ２;
-            public string 引継ぎ３;
+            public required string 予備;
+            public required string リアクション;
+            public required string 引継ぎ１;
+            public required string 引継ぎ２;
+            public required string 引継ぎ３;
             public int ラップカウント;
-            public string 資格級;
+            public required string 資格級;
             public int 事由表示;
-            public string 事由予備;
-            public string 標準１;
-            public string 標準２;
-            public string 標準３;
-            public string 標準４;
-            public string 標準５;
-            public string 中間標準１;
-            public string 中間標準２;
-            public string 中間標準３;
-            public string 中間標準４;
-            public string 中間標準５;
+            public required string 事由予備;
+            public required string 標準１;
+            public required string 標準２;
+            public required string 標準３;
+            public required string 標準４;
+            public required string 標準５;
+            public required string 中間標準１;
+            public required string 中間標準２;
+            public required string 中間標準３;
+            public required string 中間標準４;
+            public required string 中間標準５;
             public int オープン;
-            public string FINAポイント;
-            public string 中間新記録電光マーク;
+            public required string FINAポイント;
+            public required string 中間新記録電光マーク;
             public int 第一泳者新記録判定クラス;
             public int 第一泳者標準記録判定クラス;
-            public string 泳力級;
+            public required string 泳力級;
         }
 
         private class LapRecord
@@ -97,66 +97,66 @@ namespace SeikoHelper
             public short 記録区分番号;
             public short 記録名称番号;
 
-            public string m25;
-            public string m50;
-            public string m75;
-            public string m100;
-            public string m125;
-            public string m150;
-            public string m175;
-            public string m200;
-            public string m225;
-            public string m250;
-            public string m275;
-            public string m300;
-            public string m325;
-            public string m350;
-            public string m375;
-            public string m400;
-            public string m425;
-            public string m450;
-            public string m475;
-            public string m500;
-            public string m525;
-            public string m550;
-            public string m575;
-            public string m600;
-            public string m625;
-            public string m650;
-            public string m675;
-            public string m700;
-            public string m725;
-            public string m750;
-            public string m775;
-            public string m800;
-            public string m825;
-            public string m850;
-            public string m875;
-            public string m900;
-            public string m925;
-            public string m950;
-            public string m975;
-            public string m1000;
-            public string m1025;
-            public string m1050;
-            public string m1075;
-            public string m1100;
-            public string m1125;
-            public string m1150;
-            public string m1175;
-            public string m1200;
-            public string m1225;
-            public string m1250;
-            public string m1275;
-            public string m1300;
-            public string m1325;
-            public string m1350;
-            public string m1375;
-            public string m1400;
-            public string m1425;
-            public string m1450;
-            public string m1475;
-            public string m1500;
+            public required string m25;
+            public required string m50;
+            public required string m75;
+            public required string m100;
+            public required string m125;
+            public required string m150;
+            public required string m175;
+            public required string m200;
+            public required string m225;
+            public required string m250;
+            public required string m275;
+            public required string m300;
+            public required string m325;
+            public required string m350;
+            public required string m375;
+            public required string m400;
+            public required string m425;
+            public required string m450;
+            public required string m475;
+            public required string m500;
+            public required string m525;
+            public required string m550;
+            public required string m575;
+            public required string m600;
+            public required string m625;
+            public required string m650;
+            public required string m675;
+            public required string m700;
+            public required string m725;
+            public required string m750;
+            public required string m775;
+            public required string m800;
+            public required string m825;
+            public required string m850;
+            public required string m875;
+            public required string m900;
+            public required string m925;
+            public required string m950;
+            public required string m975;
+            public required string m1000;
+            public required string m1025;
+            public required string m1050;
+            public required string m1075;
+            public required string m1100;
+            public required string m1125;
+            public required string m1150;
+            public required string m1175;
+            public required string m1200;
+            public required string m1225;
+            public required string m1250;
+            public required string m1275;
+            public required string m1300;
+            public required string m1325;
+            public required string m1350;
+            public required string m1375;
+            public required string m1400;
+            public required string m1425;
+            public required string m1450;
+            public required string m1475;
+            public required string m1500;
         }
 
         public class ProgramNoMap
@@ -616,67 +616,68 @@ namespace SeikoHelper
                             水路 = (short)reader["水路"],
                             記録区分番号 = (short)reader["記録区分番号"],
                             記録名称番号 = (short)reader["記録名称番号"],
+                            m25 = reader.IsDBNull("25m") ? "" : reader.GetString("25m"),
 
-                            m25 = reader["25m"] as string,
-                            m50 = reader["50m"] as string,
-                            m75 = reader["75m"] as string,
-                            m100 = reader["100m"] as string,
-                            m125 = reader["125m"] as string,
-                            m150 = reader["150m"] as string,
-                            m175 = reader["175m"] as string,
-                            m200 = reader["200m"] as string,
-                            m225 = reader["225m"] as string,
-                            m250 = reader["250m"] as string,
-                            m275 = reader["275m"] as string,
-                            m300 = reader["300m"] as string,
-                            m325 = reader["325m"] as string,
-                            m350 = reader["350m"] as string,
-                            m375 = reader["375m"] as string,
-                            m400 = reader["400m"] as string,
-                            m425 = reader["425m"] as string,
-                            m450 = reader["450m"] as string,
-                            m475 = reader["475m"] as string,
-                            m500 = reader["500m"] as string,
-                            m525 = reader["525m"] as string,
-                            m550 = reader["550m"] as string,
-                            m575 = reader["575m"] as string,
-                            m600 = reader["600m"] as string,
-                            m625 = reader["625m"] as string,
-                            m650 = reader["650m"] as string,
-                            m675 = reader["675m"] as string,
-                            m700 = reader["700m"] as string,
-                            m725 = reader["725m"] as string,
-                            m750 = reader["750m"] as string,
-                            m775 = reader["775m"] as string,
-                            m800 = reader["800m"] as string,
-                            m825 = reader["825m"] as string,
-                            m850 = reader["850m"] as string,
-                            m875 = reader["875m"] as string,
-                            m900 = reader["900m"] as string,
-                            m925 = reader["925m"] as string,
-                            m950 = reader["950m"] as string,
-                            m975 = reader["975m"] as string,
-                            m1000 = reader["1000m"] as string,
-                            m1025 = reader["1025m"] as string,
-                            m1050 = reader["1050m"] as string,
-                            m1075 = reader["1075m"] as string,
-                            m1100 = reader["1100m"] as string,
-                            m1125 = reader["1125m"] as string,
-                            m1150 = reader["1150m"] as string,
-                            m1175 = reader["1175m"] as string,
-                            m1200 = reader["1200m"] as string,
-                            m1225 = reader["1225m"] as string,
-                            m1250 = reader["1250m"] as string,
-                            m1275 = reader["1275m"] as string,
-                            m1300 = reader["1300m"] as string,
-                            m1325 = reader["1325m"] as string,
-                            m1350 = reader["1350m"] as string,
-                            m1375 = reader["1375m"] as string,
-                            m1400 = reader["1400m"] as string,
-                            m1425 = reader["1425m"] as string,
-                            m1450 = reader["1450m"] as string,
-                            m1475 = reader["1475m"] as string,
-                            m1500 = reader["1500m"] as string,
+                            //m25 = reader["25m"] as string,
+                            m50 = Convert.ToString(reader["50m"]) ?? "",
+                            m75 = Convert.ToString(reader["75m"]) ?? "",
+                            m100 = Convert.ToString(reader["100m"]) ?? "",
+                            m125 = Convert.ToString(reader["125m"]) ?? "",
+                            m150 = Convert.ToString(reader["150m"]) ?? "",
+                            m175 = Convert.ToString(reader["175m"]) ?? "",
+                            m200 = Convert.ToString(reader["200m"]) ?? "",
+                            m225 = Convert.ToString(reader["225m"]) ?? "",
+                            m250 = Convert.ToString(reader["250m"]) ?? "",
+                            m275 = Convert.ToString(reader["275m"]) ?? "",
+                            m300 = Convert.ToString(reader["300m"]) ?? "",
+                            m325 = Convert.ToString(reader["325m"]) ?? "",
+                            m350 = Convert.ToString(reader["350m"]) ?? "",
+                            m375 = Convert.ToString(reader["375m"]) ?? "",
+                            m400 = Convert.ToString(reader["400m"]) ?? "",
+                            m425 = Convert.ToString(reader["425m"]) ?? "",
+                            m450 = Convert.ToString(reader["450m"]) ?? "",
+                            m475 = Convert.ToString(reader["475m"]) ?? "",
+                            m500 = Convert.ToString(reader["500m"]) ?? "",
+                            m525 = Convert.ToString(reader["525m"]) ?? "",
+                            m550 = Convert.ToString(reader["550m"]) ?? "",
+                            m575 = Convert.ToString(reader["575m"]) ?? "",
+                            m600 = Convert.ToString(reader["600m"]) ?? "",
+                            m625 = Convert.ToString(reader["625m"]) ?? "",
+                            m650 = Convert.ToString(reader["650m"]) ?? "",
+                            m675 = Convert.ToString(reader["675m"]) ?? "",
+                            m700 = Convert.ToString(reader["700m"]) ?? "",
+                            m725 = Convert.ToString(reader["725m"]) ?? "",
+                            m750 = Convert.ToString(reader["750m"]) ?? "",
+                            m775 = Convert.ToString(reader["775m"]) ?? "",
+                            m800 = Convert.ToString(reader["800m"]) ?? "",
+                            m825 = Convert.ToString(reader["825m"]) ?? "",
+                            m850 = Convert.ToString(reader["850m"]) ?? "",
+                            m875 = Convert.ToString(reader["875m"]) ?? "",
+                            m900 = Convert.ToString(reader["900m"]) ?? "",
+                            m925 = Convert.ToString(reader["925m"]) ?? "",
+                            m950 = Convert.ToString(reader["950m"]) ?? "",
+                            m975 = Convert.ToString(reader["975m"]) ?? "",
+                            m1000 = Convert.ToString(reader["1000m"]) ?? "",
+                            m1025 = Convert.ToString(reader["1025m"]) ?? "",
+                            m1050 = Convert.ToString(reader["1050m"]) ?? "",
+                            m1075 = Convert.ToString(reader["1075m"]) ?? "",
+                            m1100 = Convert.ToString(reader["1100m"]) ?? "",
+                            m1125 = Convert.ToString(reader["1125m"]) ?? "",
+                            m1150 = Convert.ToString(reader["1150m"]) ?? "",
+                            m1175 = Convert.ToString(reader["1175m"]) ?? "",
+                            m1200 = Convert.ToString(reader["1200m"]) ?? "",
+                            m1225 = Convert.ToString(reader["1225m"]) ?? "",
+                            m1250 = Convert.ToString(reader["1250m"]) ?? "",
+                            m1275 = Convert.ToString(reader["1275m"]) ?? "",
+                            m1300 = Convert.ToString(reader["1300m"]) ?? "",
+                            m1325 = Convert.ToString(reader["1325m"]) ?? "",
+                            m1350 = Convert.ToString(reader["1350m"]) ?? "",
+                            m1375 = Convert.ToString(reader["1375m"]) ?? "",
+                            m1400 = Convert.ToString(reader["1400m"]) ?? "",
+                            m1425 = Convert.ToString(reader["1425m"]) ?? "",
+                            m1450 = Convert.ToString(reader["1450m"]) ?? "",
+                            m1475 = Convert.ToString(reader["1475m"]) ?? "",
+                            m1500 = Convert.ToString(reader["1500m"]) ?? "",
                         };
 
                         listLapRecord.Add(record);
