@@ -438,16 +438,16 @@ namespace SeikoHelper
                             int genderCode = ConvToInt(reader["性別コード"]);
                             int strokeCode = ConvToInt(reader["種目コード"]);
                             int distanceCode = ConvToInt(reader["距離コード"]);
-                            string swimmer1 = (string)reader["第1泳者"];
-                            string swimmer2 = (string)reader["第2泳者"];
-                            string swimmer3 = (string)reader["第3泳者"];
-                            string swimmer4 = (string)reader["第4泳者"];
-                            string shozoku = (string)reader["所属・チーム名"];
-                            string hizuke = (string)reader["日付"];
+                            string swimmer1 = Convert.ToString(reader["第1泳者"]) ?? "";
+                            string swimmer2 = Convert.ToString(reader["第2泳者"]) ?? "";
+                            string swimmer3 = Convert.ToString(reader["第3泳者"]) ?? "";
+                            string swimmer4 = Convert.ToString(reader["第4泳者"]) ?? "";
+                            string shozoku = Convert.ToString(reader["所属・チーム名"]) ?? "";
+                            string hizuke = Convert.ToString(reader["日付"]) ?? "";
                             //venue = (string)reader["開催地"];
                             ////eventName = (string) reader["競技会名"];
                             int classNo = ConvToInt(reader["新記録判定クラス"]);
-                            string myStrTime = ConvToString(reader["ゴール"]);
+                            string myStrTime = Convert.ToString(reader["ゴール"]) ?? "";
 
                             int mytime = TimeStr2Int(myStrTime);
 
@@ -482,8 +482,8 @@ namespace SeikoHelper
                             string swimmer1 = (string)reader["第1泳者"];
                             string shozoku = (string)reader["所属・チーム名"];
                             string hizuke = (string)reader["日付"];
-                            string myStrTime = ConvToString(reader["中間記録"]);
-                            int classNo = ConvToInt(reader["第一泳者新記録判定クラス"]);
+                            string myStrTime = Convert.ToString(reader["中間記録"]) ?? "";
+                            int classNo = Convert.ToInt32(reader["第一泳者新記録判定クラス"]);
                             int strokeCode2 = strokeCode - 5;
                             int distanceCode2 = distanceCode - 2;
 
@@ -599,16 +599,16 @@ namespace SeikoHelper
                             int genderCode = ConvToInt(reader["性別コード"]);
                             int strokeCode = ConvToInt(reader["種目コード"]);
                             int distanceCode = ConvToInt(reader["距離コード"]);
-                            string swimmer1 = (string)reader["第1泳者"];
-                            string swimmer2 = (string)reader["第2泳者"];
-                            string swimmer3 = (string)reader["第3泳者"];
-                            string swimmer4 = (string)reader["第4泳者"];
-                            string shozoku = (string)reader["所属・チーム名"];
-                            string hizuke = (string)reader["日付"];
+                            string swimmer1 = Convert.ToString(reader["第1泳者"]) ?? "";
+                            string swimmer2 = Convert.ToString(reader["第2泳者"]) ?? "";
+                            string swimmer3 = Convert.ToString(reader["第3泳者"]) ?? "";
+                            string swimmer4 = Convert.ToString(reader["第4泳者"]) ?? "";
+                            string shozoku = Convert.ToString(reader["所属・チーム名"]) ?? "";
+                            string hizuke = Convert.ToString(reader["日付"]) ?? "";
                             //venue = (string)reader["開催地"];
                             ////eventName = (string) reader["競技会名"];
                             int classNo = ConvToInt(reader["新記録判定クラス"]);
-                            string myStrTime = ConvToString( reader["ゴール"]);
+                            string myStrTime = Convert.ToString( reader["ゴール"]) ?? "";
                             
                             int mytime = TimeStr2Int(myStrTime);
                             string gameRecord = GetGameRecord(genderCode, classNo, distanceCode, strokeCode);
