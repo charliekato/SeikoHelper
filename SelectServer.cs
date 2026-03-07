@@ -24,9 +24,9 @@ namespace SeikoHelper
         }
         private void btnOK_Click(object sender, EventArgs e)
         {
-            if (ServerAccessOK(tbxServerName.Text))
+            GlobalV.ConnectionString = GlobalV.MagicHead+tbxPassword.Text + GlobalV.MagicHead2+ tbxServerName.Text + GlobalV.MagicWord;
+            if (ServerAccessOK())
             {
-                GlobalV.ServerName = tbxServerName.Text;
 
                 SelectEvent selEventForm = new SelectEvent();
                 selEventForm.Show();
@@ -37,15 +37,13 @@ namespace SeikoHelper
             }
           
         }
-        static public bool ServerAccessOK(string serverName)
+        static public bool ServerAccessOK()
         {
-            GlobalV.ServerName = serverName;
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             string sqlQuery = "select * from ëÂâÔê›íË";
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
                 {
                     connection.Open();
                     using (SqlCommand command = new SqlCommand(sqlQuery, connection))

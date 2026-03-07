@@ -21,7 +21,6 @@ namespace SeikoHelper
             // フォルダがなければ作成
             Directory.CreateDirectory(folderPath);
 
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
 
             string sql;
             string sqlYoko = @"
@@ -156,7 +155,7 @@ where リレーチーム.大会番号 = @eventNo
             {
                 var worksheet = workbook.Worksheets.Add("個人種目");
                 var worksheet2 = workbook.Worksheets.Add("リレー種目");
-                using (var conn = new SqlConnection(connectionString))
+                using (var conn = new SqlConnection(GlobalV.ConnectionString))
                 {
                     if (tateFlag) sql = sqlTate;
                     else sql = sqlYoko;

@@ -178,10 +178,9 @@ namespace SeikoHelper
 
         public static void MergePrograms(int eventNo)
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
 
 
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(GlobalV.ConnectionString))
             {
                 conn.Open();
 

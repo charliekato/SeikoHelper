@@ -5,7 +5,7 @@ namespace SeikoHelper
     {
         private static int GetMaxSwimmerNo()
         {
-            using (SqlConnection conn = new SqlConnection(GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord))
+            using (SqlConnection conn = new SqlConnection(GlobalV.ConnectionString ))
             {
                 conn.Open();
                 string myQuery = @" select MAX(選手番号) as MAX from 選手 where 大会番号=@eventNo";
@@ -24,7 +24,7 @@ namespace SeikoHelper
         }
         static void UpdateOneRecord(int UID, int kumi, int laneNo, int swimmerID, int sClass)
         {
-            using (SqlConnection conn = new SqlConnection(GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord))
+            using (SqlConnection conn = new SqlConnection(GlobalV.ConnectionString))
             {
                 conn.Open();
                 string myQuery = @"update 記録 set 標準記録判定クラス=@sClass 
@@ -49,7 +49,7 @@ namespace SeikoHelper
             //int[] styleNo = new int[numSwimmer];
             //int[] distanceCode = new int[numSwimmer];
 
-            using (SqlConnection conn = new SqlConnection(GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord))
+            using (SqlConnection conn = new SqlConnection(GlobalV.ConnectionString))
             {
                 conn.Open();
                 string myQuery = @"select 選手番号, 標準記録判定クラス, 種目コード, 距離コード from エントリー where 大会番号=@eventNo";

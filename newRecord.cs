@@ -29,8 +29,7 @@ namespace SeikoHelper
                      Select * INTO 新記録bk 
                      From 新記録
                      Where 大会番号=@eventNo";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(Query, connection))
@@ -49,8 +48,7 @@ namespace SeikoHelper
         {
             string Query = @"Select TOP 1 記録名称番号 from 新記録名称
                               where 大会番号=@eventNo";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(Query, connection))
@@ -80,8 +78,7 @@ namespace SeikoHelper
                        @distanceCode,@timeValue,@holderNo, @name,@shozoku,@eventName,@eventVenue 
                       )"; 
             
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
@@ -119,8 +116,7 @@ namespace SeikoHelper
                      ( @eventNo, @gender, @classNo, @recordNo, @strokeCode, 
                        @distanceCode,@timeValue,@hizuke,@holderNo, @name,@shozoku,@eventName,@eventVenue)"; 
             
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
@@ -157,13 +153,12 @@ namespace SeikoHelper
                        and 記録名称番号=1 
                        and 種目コード=@strokeCode
                        and 距離コード=@distanceCode";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             string name=swimmer1;
             if (strokeCode>5)
             {
                 name += "・" + swimmer2 + "・" + swimmer3 + "・" + swimmer4;
             }
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
@@ -192,9 +187,8 @@ namespace SeikoHelper
                    and 記録名称番号=( select TOP 1 記録名称番号 from 新記録名称 where 記録名称='大会' and 大会番号=@eventNo)
                    and 種目コード=@strokeCode
                    and 距離コード=@distanceCode";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             string GR = "";
-            using ( SqlConnection connection=new SqlConnection(connectionString))
+            using ( SqlConnection connection=new SqlConnection(GlobalV.ConnectionString))
             {
 
                 connection.Open();
@@ -233,10 +227,9 @@ namespace SeikoHelper
            public static void CompareToExcel(string serverName, int eventNo,string excelFile)
         {
             int numDifference=0;
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             string query = " SELECT * from v新記録 where 大会番号=@eventNo and 記録名称='大会'";
 
-            using (var con = new SqlConnection(connectionString))
+            using (var con = new SqlConnection(GlobalV.ConnectionString))
             using (var cmd = new SqlCommand(query, con))
             {
                 cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
@@ -332,11 +325,10 @@ namespace SeikoHelper
         }
         public static void UpdateExcel(string serverName, int eventNo,string filePath ,string templatePath)
         {
-                    string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
 
             string query = " SELECT * from 新記録bk where 大会番号=@eventNo";
 
-            using (var con = new SqlConnection(connectionString))
+            using (var con = new SqlConnection(GlobalV.ConnectionString))
             using (var cmd = new SqlCommand(query, con))
             {
                 cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
@@ -403,11 +395,10 @@ namespace SeikoHelper
         public static void DeleteBackup()
         {
             string query = "drop table 新記録bk";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             try
             {
 
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
                 {
                     connection.Open();
                     using (SqlCommand command = new SqlCommand(query, connection))
@@ -424,8 +415,7 @@ namespace SeikoHelper
         public static void InsertGameRecord()
         {
             string query = "select * from v最速者リスト where 大会番号=@eventNo";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
@@ -463,8 +453,7 @@ namespace SeikoHelper
         public static void UpdateGameRecord4RelayFirstSwimmer()
         {
             string query = "select * from v発生新記録 where 大会番号=@eventNo and 中間新記録マーク<>''";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
@@ -504,8 +493,7 @@ namespace SeikoHelper
         {
             string query = "select MAX(クラス番号) from クラス where 大会番号=@eventNo";
 
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
@@ -585,8 +573,7 @@ namespace SeikoHelper
         {
             string query = "select * from v発生新記録 where 大会番号=@eventNo";
             
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
@@ -630,8 +617,7 @@ namespace SeikoHelper
                                   and 種目コード=@strokeCode
                                   and 性別コード=@genderCode
                                   and 大会番号=@eventNo";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
@@ -662,8 +648,7 @@ namespace SeikoHelper
                        and 記録名称番号=1 
                        and 種目コード=@strokeCode
                        and 距離コード=@distanceCode";
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
@@ -688,13 +673,12 @@ namespace SeikoHelper
         {
             string sql = "SELECT * FROM 新記録bk where 大会番号=@eventNo"; 
 
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
 
             //  SQLを実行して DataTable に取得
             DataTable table = new DataTable();
             try
             {
-                using (var con = new SqlConnection(connectionString))
+                using (var con = new SqlConnection(GlobalV.ConnectionString))
                 using (var cmd = new SqlCommand(sql, con))
                 using (var adapter = new SqlDataAdapter(cmd))
                 {

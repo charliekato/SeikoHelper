@@ -20,7 +20,9 @@
         
         public static string ServerName = string.Empty;
         public const string MagicWord = "\\SQLEXPRESS;Encrypt=True;TrustServerCertificate=True;";
-        public const string MagicHead = "Persist Security Info=False;User ID=Sw;Password=;Initial Catalog=Sw;Server=";
+        public const string MagicHead = "Persist Security Info=False;User ID=Sw;Password=";
+        public const string MagicHead2 = ";Initial Catalog=Sw;Server=";
+        public static string ConnectionString = string.Empty;
         public static bool Strategy1 = false; // 男女の合同を許す
         public static bool Strategy2 = false; //組単位の合同を許す
         public static string EventName = string.Empty;

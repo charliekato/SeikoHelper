@@ -92,12 +92,11 @@ namespace SeikoHelper
 
             // フォルダがなければ作成
             Directory.CreateDirectory(folderPath);
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
 
             string query = "select * from vランキング　where 大会番号=@eventNo and 順位=1";
 
 
-            using (var con = new SqlConnection(connectionString))
+            using (var con = new SqlConnection(GlobalV.ConnectionString))
             using (var cmd = new SqlCommand(query, con))
             {
                 cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);

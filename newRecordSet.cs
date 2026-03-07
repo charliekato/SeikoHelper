@@ -22,11 +22,10 @@ namespace SeikoHelper
             // フォルダがなければ作成
             Directory.CreateDirectory(folderPath);
 
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             using (XLWorkbook workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add("発生大会記録");
-                using (var conn = new SqlConnection(connectionString))
+                using (var conn = new SqlConnection(GlobalV.ConnectionString))
                 {
                     using (SqlCommand cmd = new SqlCommand(myQuery, conn))
                     {

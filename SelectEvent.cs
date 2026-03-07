@@ -22,7 +22,6 @@ namespace SeikoHelper
         }
         public void ShowEventList()
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             string sqlQuery = "select * from 大会設定";
             listEvent.Items.Clear();
 
@@ -50,7 +49,7 @@ namespace SeikoHelper
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
                 {
                     connection.Open();
                     using (SqlCommand command = new SqlCommand(sqlQuery, connection))

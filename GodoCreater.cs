@@ -68,8 +68,7 @@ namespace SeikoHelper
         /// <returns></returns>
         static int HowManySwimmers(int prgNo, int kumi=1)
         {
-            string ConnectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new SqlConnection(ConnectionString))
+            using (SqlConnection myCon = new SqlConnection(GlobalV.ConnectionString))
             {
                 string myQuery = @"SELECT  count(選手番号) as numSwimmer
                 FROM 記録 WHERE 組= @kumi  AND 競技番号=(
@@ -99,8 +98,7 @@ namespace SeikoHelper
 
         static int HowManySwimmers(int prgNo )
         {
-            string ConnectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new SqlConnection(ConnectionString))
+            using (SqlConnection myCon = new SqlConnection(GlobalV.ConnectionString))
             {
                 string myQuery = @"SELECT  count(1) as numSwimmer
                 FROM 記録 WHERE  競技番号=(
@@ -129,11 +127,10 @@ namespace SeikoHelper
 
         static int GetOrCreateGodoClass()
         {
-            string ConnectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             string className = "合同レース";
             string myQuery = "select クラス番号 FROM クラス WHERE クラス名称 = @className and 大会番号 = @eventNo ";
             int classNo=0; // for 合同レース
-            using (SqlConnection myCon = new SqlConnection(ConnectionString))
+            using (SqlConnection myCon = new SqlConnection(GlobalV.ConnectionString))
             {
 
                 myCon.Open();
@@ -181,8 +178,7 @@ namespace SeikoHelper
 
         static void ReadEventDb() // read event table again to get maxlane and erolaneuse
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new SqlConnection(connectionString))
+            using (SqlConnection myCon = new SqlConnection(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = "SELECT 使用水路予選, 使用水路タイム決勝, 使用水路決勝, ゼロコース使用 " +
@@ -232,7 +228,7 @@ namespace SeikoHelper
             where 大会番号=@eventNo ";
             int maxPrgNo = 0;
 
-            using (SqlConnection conn = new SqlConnection(GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord))
+            using (SqlConnection conn = new SqlConnection( GlobalV.ConnectionString))
             {
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand(myQuery, conn))
@@ -387,8 +383,7 @@ namespace SeikoHelper
         }
         static void ChangeGender(int prgNo)
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -404,8 +399,7 @@ namespace SeikoHelper
          }
         static void ChangeClass(int prgNo,int classNo)
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -422,8 +416,7 @@ namespace SeikoHelper
         }
         static void DeleteProgram(int prgNo)
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -446,8 +439,7 @@ namespace SeikoHelper
 /// <returns> returns 0 if the race does not exist or nobody occupied any lane.</returns>
         static int GetFirstLane(int prgNo, int kumi)
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"select min(水路) as firstLane  from 記録
@@ -480,8 +472,7 @@ namespace SeikoHelper
 /// <returns> returns 0 if the race does not exist or nobody occupied any lane.</returns>
         static int GetLastLane(int prgNo, int kumi)
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @" select MAX(水路) as LastLane  from 記録
@@ -508,7 +499,6 @@ namespace SeikoHelper
         static void MoveSwimmer(int prgNo, int kumi, int startLane)
         {
             int uid = GlobalV.UIDFromPrgNo[prgNo-1];
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             int[] thisSwimmerID = new int[10];
             string[] entryTime = new string[10];
             Array.Fill(entryTime, string.Empty);
@@ -527,7 +517,7 @@ namespace SeikoHelper
             int lane;
             int scounter = 0;
             int maxScounter = 0;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -854,7 +844,6 @@ namespace SeikoHelper
         static void MoveSwimmer(int prgNo, int kumi, int toPrgNo, int toKumi)
         {
             int uid = GlobalV.UIDFromPrgNo[prgNo-1];
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             int[] thisSwimmerID = new int[11];
             string[] entryTime = new string[11];
             Array.Fill(entryTime, string.Empty);
@@ -872,7 +861,7 @@ namespace SeikoHelper
             int lane;
             int startLane=0;
             int maxLane = 0;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -953,7 +942,6 @@ namespace SeikoHelper
         static void MoveSwimmerReverse(int prgNo, int kumi, int toPrgNo, int toKumi)
         {
             int uid = GlobalV.UIDFromPrgNo[prgNo-1];
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
             int[] thisSwimmerID = new int[10];
             string[] entryTime = new string[10];
             Array.Fill(entryTime, string.Empty);
@@ -971,7 +959,7 @@ namespace SeikoHelper
             int scounter = 0;
             int startLane=0;
             int maxScounter = 0;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -1068,8 +1056,7 @@ namespace SeikoHelper
         }
         static void ReadProgramDB()
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 InitProgramDBArray(myCon);
@@ -1105,8 +1092,7 @@ namespace SeikoHelper
 
         static void DeleteGoDoTable()
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = "delete from 合同レースプログラム where 大会番号=@EventNo;";
@@ -1120,8 +1106,7 @@ namespace SeikoHelper
 
         static void CreateGoDoTable()
         {
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery;
@@ -1197,8 +1182,7 @@ namespace SeikoHelper
         static void CreateGoDoTableObso()
         {
             DeleteGoDoTable();
-            string connectionString = GlobalV.MagicHead + GlobalV.ServerName + GlobalV.MagicWord;
-            using (SqlConnection myCon = new(connectionString))
+            using (SqlConnection myCon = new(GlobalV.ConnectionString))
             {
                 myCon.Open();
                 string myQuery;
