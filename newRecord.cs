@@ -199,8 +199,13 @@ namespace SeikoHelper
                     command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value = strokeCode;
                     command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value = distanceCode;
                     command.Parameters.AddWithValue("@classNo", SqlDbType.Int).Value = classNo;
-                    object reader = command.ExecuteScalar();
-                    GR = if_not_null_string(reader) ;
+                    using (var dr = command.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            GR = dr["記録"] == DBNull.Value ? "" : dr["記録"].ToString() ?? "";
+                        }
+                    }
                 } 
             }
             return GR ;
@@ -339,56 +344,46 @@ namespace SeikoHelper
                     dt.Load(reader);
                 }
 
-                try
+                ExcelPhoneticCleaner.RemovePhoneticRuns(templatePath);
+                // ClosedXMLでExcelファイル作成
+                using (var wb = new XLWorkbook(templatePath))
                 {
-                    ExcelPhoneticCleaner.RemovePhoneticRuns(templatePath);
-                    // ClosedXMLでExcelファイル作成
-                    using (var wb = new XLWorkbook(templatePath))
+                    foreach (DataRow dr in dt.Rows)
                     {
-                        foreach (DataRow dr in dt.Rows)
+                        string classNo = Convert.ToString(dr["記録区分番号"]) ?? "" ;  
+                        int gender = Convert.ToInt32(dr["性別コード"]);
+                        string stroke = Convert.ToString(dr["種目コード"]) ?? "";
+                        string distance = Convert.ToString(dr["距離コード"]) ?? "";
+                        string rangeName = genderStr[gender - 1] + classNo + "_" + distance + "_" + stroke;
+                        string mytime = Convert.ToString(dr["記録"]) ?? "";
+                        string oldGR = WinnerList.TryGetValue(wb, rangeName + "Time");
+                        if ((oldGR=="")|| (TimeStr2Int(oldGR) > TimeStr2Int(mytime)) )
                         {
-                            string classNo = Convert.ToString(dr["記録区分番号"]) ?? "" ;  
-                            int gender = Convert.ToInt32(dr["性別コード"]);
-                            string stroke = Convert.ToString(dr["種目コード"]) ?? "";
-                            string distance = Convert.ToString(dr["距離コード"]) ?? "";
-                            
-
-                            string rangeName = genderStr[gender - 1] + classNo + "_" + distance + "_" + stroke;
-                            string oldGR = WinnerList.TryGetValue(wb, rangeName + "Time");
-                            if ((TimeStr2Int(oldGR) > TimeStr2Int((string)dr["記録"])) || oldGR == "")
-                            {
-                                string nameStr= Convert.ToString(dr["記録保持者"]) ?? "";
-                                
-
-                                WinnerList.TrySetValue(wb, rangeName + "Time", (string)dr["記録"]);
-                                WinnerList.SetMark(wb, rangeName + "Time", XLColor.Yellow);
-                                WinnerList.TrySetValue(wb, rangeName + "Name", nameStr.Replace("・","\n"));
-                                WinnerList.SetMark(wb, rangeName + "Name", XLColor.Yellow);
-                                WinnerList.TrySetValue(wb, rangeName + "Team", (string)dr["所属"]);
-                                WinnerList.SetMark(wb, rangeName + "Team", XLColor.Yellow);
-
-                                WinnerList.TrySetValue(wb, rangeName + "GR", NewRecordManager.thisYear);
-                            }
-                        }
-                        WinnerList.TrySetValue(wb, "eventDate", WinnerList.EventDate+"現在");
-                        // ファイル保存
-                        wb.SaveAs(filePath);
-                        var result = MessageBox.Show(
-                            $"Excelファイルを保存しました：\n{filePath}\n\n開きますか？",
-                            "完了",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Information
-                        );
-
-                        if (result == DialogResult.Yes)
-                        {
-                            Process.Start("explorer.exe", $"\"{filePath}\"");
+                            string nameStr= Convert.ToString(dr["記録保持者"]) ?? "";
+                            WinnerList.TrySetValue(wb, rangeName + "Time", mytime);
+                            WinnerList.SetMark(wb, rangeName + "Time", XLColor.Yellow);
+                            WinnerList.TrySetValue(wb, rangeName + "Name", nameStr.Replace("・","\n"));
+                            WinnerList.SetMark(wb, rangeName + "Name", XLColor.Yellow);
+                            WinnerList.TrySetValue(wb, rangeName + "Team", (string)dr["所属"]);
+                            WinnerList.SetMark(wb, rangeName + "Team", XLColor.Yellow);
+                            WinnerList.TrySetValue(wb, rangeName + "GR", NewRecordManager.thisYear);
+                            WinnerList.SetMark(wb, rangeName + "GR", XLColor.Yellow);
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Excelファイルの処理中にエラーが発生しました: " + ex.Message);
+                    WinnerList.TrySetValue(wb, "eventDate", WinnerList.EventDate+"現在");
+                    // ファイル保存
+                    wb.SaveAs(filePath);
+                    var result = MessageBox.Show(
+                        $"Excelファイルを保存しました：\n{filePath}\n\n開きますか？",
+                        "完了",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information
+                    );
+
+                    if (result == DialogResult.Yes)
+                    {
+                        Process.Start("explorer.exe", $"\"{filePath}\"");
+                    }
                 }
             }
         }

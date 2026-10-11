@@ -53,13 +53,21 @@ namespace SeikoHelper
         public static string EventVenue = string.Empty;
         public static bool TrySetValue(XLWorkbook wb, string name, string value)
         {
-            //if (wb.NamedRanges.TryGetValue(name, out var nr))
-            if (wb.DefinedNames.TryGetValue(name, out var nr))
+            try
             {
-                nr.Ranges.First().Value = value;
-                return true;
+                if (wb.DefinedNames.TryGetValue(name, out var nr))
+                {
+                    nr.Ranges.First().Value = value;
+                    return true;
+                } 
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("[TrySetValue:] Exception occurred while setting value of :" + name + "\n" + ex.Message);
+                return false;
             }
             return false;
+    
         }
         public static void SetMark(XLWorkbook wb, string name, XLColor color)
         {
@@ -77,6 +85,7 @@ namespace SeikoHelper
                 var firstCell = firstRange.FirstCell();
                 return firstCell.GetValue<string>();
             }
+        //    MessageBox.Show("[TryGetValue:] Failed to get value of :" + name);
             return "";
         }
 

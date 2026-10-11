@@ -35,12 +35,13 @@
             lblServerName = new Label();
             lblPassword = new Label();
             tbxPassword = new TextBox();
+            label1 = new Label();
             SuspendLayout();
             // 
             // btnOK
             // 
-            btnOK.Location = new Point(169, 183);
-            btnOK.Margin = new Padding(2, 2, 2, 2);
+            btnOK.Location = new Point(169, 199);
+            btnOK.Margin = new Padding(2);
             btnOK.Name = "btnOK";
             btnOK.Size = new Size(98, 62);
             btnOK.TabIndex = 0;
@@ -51,16 +52,17 @@
             // tbxServerName
             // 
             tbxServerName.Location = new Point(228, 54);
-            tbxServerName.Margin = new Padding(2, 2, 2, 2);
+            tbxServerName.Margin = new Padding(2);
             tbxServerName.Name = "tbxServerName";
             tbxServerName.Size = new Size(245, 31);
             tbxServerName.TabIndex = 2;
+            tbxServerName.Text = "localhost";
             tbxServerName.KeyDown += tbxServerName_KeyDown;
             // 
             // btnQuit
             // 
-            btnQuit.Location = new Point(358, 183);
-            btnQuit.Margin = new Padding(2, 2, 2, 2);
+            btnQuit.Location = new Point(358, 199);
+            btnQuit.Margin = new Padding(2);
             btnQuit.Name = "btnQuit";
             btnQuit.Size = new Size(98, 62);
             btnQuit.TabIndex = 3;
@@ -94,18 +96,28 @@
             tbxPassword.Size = new Size(245, 31);
             tbxPassword.TabIndex = 5;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(219, 152);
+            label1.Name = "label1";
+            label1.Size = new Size(261, 25);
+            label1.TabIndex = 7;
+            label1.Text = "localhostの場合はPassword不要";
+            // 
             // SelectServer
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(615, 312);
+            Controls.Add(label1);
             Controls.Add(lblPassword);
             Controls.Add(tbxPassword);
             Controls.Add(lblServerName);
             Controls.Add(btnQuit);
             Controls.Add(tbxServerName);
             Controls.Add(btnOK);
-            Margin = new Padding(2, 2, 2, 2);
+            Margin = new Padding(2);
             Name = "SelectServer";
             Text = "サーバーの選択";
             Load += SelectServer_Load;
@@ -121,5 +133,6 @@
         private Label lblServerName;
         private Label lblPassword;
         private TextBox tbxPassword;
+        private Label label1;
     }
 }

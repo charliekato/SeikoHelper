@@ -24,10 +24,18 @@ namespace SeikoHelper
         }
         private void btnOK_Click(object sender, EventArgs e)
         {
-            GlobalV.ConnectionString = GlobalV.MagicHead+tbxPassword.Text + GlobalV.MagicHead2+ tbxServerName.Text + GlobalV.MagicWord;
-            if (ServerAccessOK())
+            if (tbxServerName.Text == "localhost")
+            {
+                GlobalV.ConnectionString = "Server=localhost\\SQLEXPRESS; Database = Sw; Integrated Security = True;TrustServerCertificate=True; ";
+
+            }
+            else
             {
 
+                GlobalV.ConnectionString = GlobalV.MagicHead+tbxPassword.Text + GlobalV.MagicHead2+ tbxServerName.Text + GlobalV.MagicWord;
+            }
+            if (ServerAccessOK())
+            {
                 SelectEvent selEventForm = new SelectEvent();
                 selEventForm.Show();
             }
