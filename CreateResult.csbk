@@ -1,0 +1,88 @@
+using ClosedXML.Excel;
+using Microsoft.Data.SqlClient;
+using System;
+using System.Data;
+using System.Diagnostics;
+using System.IO.Compression;
+using System.Xml.Linq;
+
+        public static void CreateResult(string serverName, int eventNo,string templatePath, string fileName)
+        {
+           
+            // 保存先のフルパス（任意で変更可）
+            string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            //string folderPath = "C:\\Users\\user";
+            string fullPath = Path.Combine(folderPath, fileName);
+
+            // フォルダがなければ作成
+            Directory.CreateDirectory(folderPath);
+
+            string query = "select * from vランキング　where 大会番号=@eventNo and 順位=1";
+
+
+            using (var con = new SqlConnection(GlobalV.ConnectionString))
+            using (var cmd = new SqlCommand(query, con))
+            {
+                cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                con.Open();
+                var dt = new DataTable();
+                using (var reader = cmd.ExecuteReader())
+                {
+                    dt.Load(reader);
+                }
+                // ClosedXMLでExcelファイル作成
+
+                ExcelPhoneticCleaner.RemovePhoneticRuns(templatePath);
+
+                using (var wb = new XLWorkbook(templatePath))
+                {
+
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        int classNo = Convert.ToInt32(dr["新記録判定クラス"] );
+                        
+                        string gender = Convert.ToString(dr["性別"]) ?? "";
+                        string style = Convert.ToString(dr["種目コード"]) ?? "";
+                        string distance = Convert.ToString(dr["距離コード"]) ?? "";
+                        
+                        string rangeName=gender +classNo+"_"+ distance +"_"+ style;
+                        TrySetValue(wb, rangeName+"Time",(string)dr["ゴール"]);
+                        string name = (string)dr["第1泳者"];
+                        string name2 = (string)dr["第2泳者"];
+
+                        if (name2 != "")
+                        {
+                            name += "\n" + name2;
+                            name += "\n" + (string)dr["第3泳者"];
+                            name += "\n" + (string)dr["第4泳者"];
+                        }
+                        TrySetValue(wb, rangeName + "Name", name);
+                        TrySetValue(wb, rangeName + "Team", (string)dr["所属"]);
+
+                        string recordMark = (string)dr["新記録印刷マーク"];
+                        if ((string)dr["中間新記録マーク"]!="") { 
+                            recordMark += "中間 : " + (string)dr["中間新記録マーク"];
+                        }
+                        TrySetValue(wb, rangeName + "GR", ((string)dr["新記録印刷マーク"]).Trim());
+                    }
+                    TrySetValue(wb, "eventName",GlobalV.EventName+"優勝者リスト");
+                    TrySetValue(wb, "eventVenue", EventVenue);
+                    TrySetValue(wb, "eventDate", EventDate.Trim());
+
+                    // ファイル保存
+                    wb.SaveAs(fullPath);
+                    var result = MessageBox.Show(
+                        $"Excelファイルを保存しました：\n{fullPath}\n\n開きますか？",
+                        "完了",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information
+                    );
+
+                    if (result == DialogResult.Yes)
+                    {
+                        Process.Start("explorer.exe", $"\"{fullPath}\"");
+                    }
+                }
+            }
+        }
+
