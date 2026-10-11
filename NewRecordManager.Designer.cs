@@ -142,7 +142,7 @@
             tbxThisYear.Name = "tbxThisYear";
             tbxThisYear.Size = new Size(53, 31);
             tbxThisYear.TabIndex = 23;
-            tbxThisYear.Text = "26";
+            tbxThisYear.PlaceholderText = "年度or回数";
             // 
             // lblThisYear
             // 

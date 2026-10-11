@@ -889,7 +889,7 @@ namespace SeikoHelper
                             firstOneClassNo[lane] = Convert.ToInt32(reader["第一泳者新記録判定クラス"]);
                             firstOneCertNo[lane] = Convert.ToInt32(reader["第一泳者標準記録判定クラス"]);
                             goal[lane] = (string) (reader["ゴール"]);
-                            yosenTime[lane] = Convert.ToInt32(reader["予選タイム"]); /* feb 2026 addition */
+                            //yosenTime[lane] = Convert.ToInt32(reader["予選タイム"]); /* feb 2026 addition */
                             if (startLane == 0)
                                 startLane = lane;
 
@@ -908,7 +908,8 @@ namespace SeikoHelper
                          第３泳者=@thirdOne , 第４泳者 = @lastOne ,
                          第一泳者新記録判定クラス=@firstOneClassNo ,
                          第一泳者標準記録判定クラス=@firstOneCertNo ,
-                         予選タイム=@yosenTime ,  /* feb 2026 addition */
+                         --予選タイム=@yosenTime ,  /* feb 2026 addition */
+                         予選タイム='',             
                          ゴール=@goal 
                       where 大会番号=@eventNo and 競技番号=@uid and 組=@tokumi and 水路=@laneNo";
 
@@ -930,7 +931,7 @@ namespace SeikoHelper
                         myCommand.Parameters.AddWithValue("@tokumi", toKumi);
                         myCommand.Parameters.AddWithValue("@laneNo", lane);
                         myCommand.Parameters.AddWithValue("@goal", goal[lane]);
-                        myCommand.Parameters.AddWithValue("@yosenTime", yosenTime[lane]); /* feb 2026 addition */
+                        //myCommand.Parameters.AddWithValue("@yosenTime", yosenTime[lane]); /* feb 2026 addition */
                         myCommand.ExecuteNonQuery();
                     }
                 }
