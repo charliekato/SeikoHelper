@@ -132,12 +132,11 @@ namespace SeikoHelper
                         
                         string rangeName=gender +classNo+"_"+ distance +"_"+ style;
                         TrySetValue(wb, rangeName+"Time",(string)dr["ゴール"]);
-                        string name = (string)dr["第1泳者"];
-                        string name2 = (string)dr["第2泳者"];
+                        string name = (string)dr["氏名"];
 
-                        if (name2 != "")
+                        if (Convert.ToInt32(style)>5) // リレー種目の場合
                         {
-                            name += "\n" + name2;
+                            name = (string)dr["第1泳者"] + "\n" + (string)dr["第2泳者"];
                             name += "\n" + (string)dr["第3泳者"];
                             name += "\n" + (string)dr["第4泳者"];
                         }
