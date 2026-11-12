@@ -21,9 +21,9 @@ CONNECTION_STR = (
 )
 
 
-TEMPLATE_FILE = "インクルーシブ大会レーン順template.xlsx"
+TEMPLATE_FILE = "template/インクルーシブ大会レーン順template.xlsx"
 
-OUTPUT_FILE = f"インクルーシブ大会レーン順_{EVENT_NO}.xlsx"
+OUTPUT_FILE = f"output/インクルーシブ大会レーン順_{EVENT_NO}.xlsx"
 
 
 # ==========================================
@@ -54,6 +54,17 @@ where 大会番号=?
 order by prgNo, kumi, lane
 """
 
+SQL_LANE_INFO = """
+select MAXLANE
+from vプログラム
+where 大会番号=? and 表示用競技番号=?
+"""
+
+SQL_ZERO_LANE = """
+select distinct ゼロコース使用
+from vプログラム
+where 大会番号=?
+"""
 
 # ==========================================
 # SQL実行
@@ -122,83 +133,89 @@ def get_columns(wb):
 
 class LaneWriter:
 
-    # ページ設定
     PAGE_ROWS = 61
-
-    # 1段の使用行数
     ROWS_PER_SIDE = 56
-
-    # 1ページの使用行数（左右合計）
-    ROWS_PER_PAGE = ROWS_PER_SIDE * 2
-
-    # 最初のデータ行
     START_ROW = 5
 
-    # テンプレートのページ数
     TEMPLATE_PAGES = 8
 
-    def __init__(self, ws, columns):
+    def __init__(self, ws, columns, maxlane_func, zero_lane):
 
         self.ws = ws
         self.col = columns
 
-        # 右側への列オフセット
         self.offset = (
             self.col["氏名2"] - self.col["氏名"]
         )
 
-        # 書き込み行カウンター
-        self.count = 0
+        self.maxlane_func = maxlane_func
+        self.zero_lane = zero_lane
+
+        # 段番号
+        # 0: 1ページ左
+        # 1: 1ページ右
+        # 2: 2ページ左 ...
+        self.segment = 0
+
+        # 現在の段で使用した行数
+        self.used = 0
 
         self.last_prg = None
-        self.last_kumi = None
 
     # --------------------------------------
-    # 現在の書き込み位置を取得
+    # 現在位置
     # --------------------------------------
 
     def position(self):
 
-        page = self.count // self.ROWS_PER_PAGE
-
-        if page >= self.TEMPLATE_PAGES:
-            raise ValueError(
-                "テンプレートのページ数を超えました。"
-            )
-
-        within_page = self.count % self.ROWS_PER_PAGE
-
-        side = within_page // self.ROWS_PER_SIDE
-
-        row_offset = within_page % self.ROWS_PER_SIDE
+        page = self.segment // 2
+        side = self.segment % 2
 
         row = (
             self.START_ROW
             + page * self.PAGE_ROWS
-            + row_offset
+            + self.used
         )
 
-        col_offset = side * self.offset
+        offset = side * self.offset
 
-        return row, col_offset
-
-    # --------------------------------------
-    # セルに書き込む
-    # --------------------------------------
-
-    def write(self, name, row, col_offset, value):
-
-        col = self.col[name] + col_offset
-
-        self.ws.cell(row=row, column=col).value = value
+        return row, offset
 
     # --------------------------------------
-    # 1行進める
+    # 残り行数
     # --------------------------------------
 
-    def advance(self):
+    def remaining(self):
 
-        self.count += 1
+        return self.ROWS_PER_SIDE - self.used
+
+    # --------------------------------------
+    # 段を進める
+    # --------------------------------------
+
+    def next_segment(self):
+
+        self.segment += 1
+        self.used = 0
+
+        if self.segment >= self.TEMPLATE_PAGES * 2:
+
+            raise ValueError(
+                "テンプレートのページ数を超えました。"
+            )
+
+    # --------------------------------------
+    # セル書き込み
+    # --------------------------------------
+
+    def write(self, name, row, offset, value):
+
+        col = self.col[name] + offset
+
+        self.ws.cell(
+            row=row,
+            column=col
+        ).value = value
 
     # --------------------------------------
     # 競技ヘッダー
@@ -214,7 +231,7 @@ class LaneWriter:
         self.write("style", row, offset, data["style"])
         self.write("yoketsu", row, offset, data["yoketsu"])
 
-        # ヘッダー行に下線を引く
+        # 上下に罫線
         side = Side(style="thin")
 
         start_col = self.col["kumi"] + offset
@@ -225,14 +242,15 @@ class LaneWriter:
             cell = self.ws.cell(row=row, column=col)
 
             border = copy(cell.border)
+            border.top = side
             border.bottom = side
 
             cell.border = border
 
-        self.advance()
+        self.used += 1
 
     # --------------------------------------
-    # 組
+    # 組番号
     # --------------------------------------
 
     def write_kumi(self, kumi):
@@ -246,67 +264,146 @@ class LaneWriter:
             f"{kumi}組"
         )
 
-        self.advance()
+        self.used += 1
 
     # --------------------------------------
     # レーン情報
     # --------------------------------------
 
-    def write_lane(self, data):
+    def write_lane(self, lane, data=None):
 
         row, offset = self.position()
 
-        self.write("lane", row, offset, data["lane"])
+        # レーン番号は必ず書く
+        self.write("lane", row, offset, lane)
 
-        self.write("氏名", row, offset, data["name"])
+        # 空きレーンならここで終了
+        if data is not None:
 
-        self.write(
-            "所属",
-            row,
-            offset,
-            f"({data['belongsto']})"
-            if data["belongsto"] else ""
-        )
+            self.write("氏名", row, offset, data["name"])
 
-        self.write("クラス", row, offset, data["class"])
+            belongsto = data["belongsto"]
 
-        self.write("St", row, offset, data["st"])
+            self.write(
+                "所属",
+                row,
+                offset,
+                f"({belongsto})" if belongsto else ""
+            )
 
-        self.write("CoE", row, offset, data["coe"])
+            self.write("クラス", row, offset, data["class"])
+            self.write("St", row, offset, data["st"])
+            self.write("CoE", row, offset, data["coe"])
 
-        self.advance()
+        self.used += 1
 
     # --------------------------------------
-    # 1レコード処理
+    # 組の必要行数
     # --------------------------------------
 
-    def add(self, data):
+    def group_rows(self, maxlane):
 
-        prg = data["prgNo"]
-        kumi = data["kumi"]
+        first_lane = 0 if self.zero_lane else 1
 
-        # 競技番号が変わった
-        if prg != self.last_prg:
+        lane_count = maxlane - first_lane + 1
 
-            self.write_program(data)
+        # 組番号1行 + 全レーン
+        return 1 + lane_count
 
-            self.last_prg = prg
-            self.last_kumi = None
+    # --------------------------------------
+    # 組を出力
+    # --------------------------------------
 
-        # 組が変わった
-        if kumi != self.last_kumi:
+    def write_group(self, kumi, swimmers, maxlane,
+                    new_program=False):
 
-            self.write_kumi(kumi)
+        # 組間の空行
+        blank_rows = 0 if new_program else 1
 
-            self.last_kumi = kumi
+        needed = blank_rows + self.group_rows(maxlane)
 
-        # レーン情報
-        self.write_lane(data)
+        # 現在の段に収まるか確認
+        if needed > self.remaining():
 
+            self.next_segment()
 
+            # 段が変わった場合は競技ヘッダーを再表示
+            # 新しい段でも競技番号が分かるようにする
+            if self.last_prg is not None:
+
+                self.write_program(self.current_program)
+
+            needed = self.group_rows(maxlane)
+
+        if needed > self.remaining():
+
+            raise ValueError(
+                f"{kumi}組が1段に収まりません。"
+            )
+
+        # 組間の空行
+        self.used += blank_rows
+
+        # 組番号
+        self.write_kumi(kumi)
+
+        # 全レーンを出力
+        first_lane = 0 if self.zero_lane else 1
+
+        for lane in range(first_lane, maxlane + 1):
+
+            self.write_lane(
+                lane,
+                swimmers.get(lane)
+            )
+
+    # --------------------------------------
+    # 競技単位の処理
+    # --------------------------------------
+
+    def write_program_groups(self, prg, groups):
+
+        self.current_program = prg
+        self.last_prg = prg["prgNo"]
+
+        maxlane = self.maxlane_func(prg["prgNo"])
+
+        first = True
+
+        for kumi, swimmers in groups:
+
+            # 最初の組はヘッダーも必要
+            if first:
+
+                needed = 1 + self.group_rows(maxlane)
+
+                if needed > self.remaining():
+                    self.next_segment()
+
+                self.write_program(prg)
+
+                self.write_group(
+                    kumi,
+                    swimmers,
+                    maxlane,
+                    new_program=True
+                )
+
+                first = False
+
+            else:
+
+                self.write_group(
+                    kumi,
+                    swimmers,
+                    maxlane
+                )
 # ==========================================
 # メイン
 # ==========================================
+
+from itertools import groupby
+
 
 def main():
 
@@ -319,25 +416,80 @@ def main():
         print("データがありません。")
         return
 
-    # Excelテンプレート読み込み
+    # ゼロコース使用
+    zero = execute(SQL_ZERO_LANE, EVENT_NO)
+
+    zero_lane = bool(zero[0]["ゼロコース使用"])
+
+    # MAXLANE取得関数
+    def get_maxlane(prgNo):
+
+        result = execute(
+            SQL_LANE_INFO,
+            EVENT_NO,
+            prgNo
+        )
+
+        if not result:
+            raise ValueError(
+                f"競技番号 {prgNo} のMAXLANEが取得できません。"
+            )
+
+        return result[0]["MAXLANE"]
+
+    # Excel読み込み
     wb = load_workbook(TEMPLATE_FILE)
 
     ws = wb["Sheet1"]
 
-    # 名前付きセルの列番号
     columns = get_columns(wb)
 
-    # 書き込み
-    writer = LaneWriter(ws, columns)
+    writer = LaneWriter(
+        ws,
+        columns,
+        get_maxlane,
+        zero_lane
+    )
 
-    for data in records:
+    # ----------------------------------
+    # 競技番号ごとに処理
+    # ----------------------------------
 
-        writer.add(data)
+    for prgNo, prg_records in groupby(
+        records,
+        key=lambda x: x["prgNo"]
+    ):
+
+        prg_records = list(prg_records)
+
+        prg = prg_records[0]
+
+        # 組ごとにまとめる
+        groups = []
+
+        for kumi, group_records in groupby(
+            prg_records,
+            key=lambda x: x["kumi"]
+        ):
+
+            swimmers = {
+                r["lane"]: r
+                for r in group_records
+            }
+
+            groups.append((kumi, swimmers))
+
+        # 競技単位で書き込み
+        writer.write_program_groups(
+            prg,
+            groups
+        )
 
     # 保存
     wb.save(OUTPUT_FILE)
 
     print(f"Saved: {OUTPUT_FILE}")
+
 
 
 if __name__ == "__main__":
