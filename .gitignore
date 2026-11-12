@@ -5,3 +5,7 @@ obj/
 *.suo
 UpgradeLog.htm
 Setup/Debug/
+.venv/
+__pycache__/
+*.pyc
+output/
