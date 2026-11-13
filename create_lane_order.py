@@ -1,35 +1,76 @@
 #!/usr/bin/env python3
 
+import json
 import pyodbc
+import os
 
+from pathlib import Path
 from openpyxl import load_workbook
 from openpyxl.styles import Side
 from copy import copy
-
 from itertools import groupby
 from openpyxl.utils.cell import coordinate_from_string
 from openpyxl.utils import column_index_from_string
 
 
 # ==========================================
+# 設定読み込み
+# ==========================================
+
+BASE_DIR = Path(__file__).resolve().parent
+
+with open(BASE_DIR / "config.json", encoding="utf-8") as f:
+    CONFIG = json.load(f)
+
+
+DB = CONFIG["database"]
+OPT = CONFIG["lane_order"]
+
+EVENT_NO = int(OPT["event_no"])
+START_ROW = int(OPT["start_row"])
+PARA_MODE = int(OPT["para_mode"])
+
+TEMPLATE_FILE = BASE_DIR / OPT["template_file"]
+OUTPUT_FILE = BASE_DIR / OPT["output_file"]
+#-------------------------------------------------------
+
+
+# ==========================================
 # 設定
 # ==========================================
 
-EVENT_NO = 39
 
-CONNECTION_STR = (
-    "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=localhost;"
-    "DATABASE=sw;"
-    "Trusted_Connection=yes;"
-    "TrustServerCertificate=yes;"
-)
+def get_connection_string():
+
+    conn = (
+        "DRIVER={ODBC Driver 18 for SQL Server};"
+        f"Server={DB['server']};"
+        f"Database={DB['database']};"
+        "TrustServerCertificate=yes;"
+    )
+
+    if DB["authentication"] == "Windows":
+
+        conn += "Trusted_Connection=yes;"
+
+    elif DB["authentication"] == "SQL":
+
+        conn += (
+            f"UID={DB['username']};"
+            f"PWD={DB['password']};"
+        )
+
+    else:
+        raise ValueError("不明な認証方式です。")
+
+    return conn
+
+
+CONNECTION_STR = get_connection_string()
 
 
 
-TEMPLATE_FILE = "template/インクルーシブ大会レーン順template.xlsx"
 
-OUTPUT_FILE = f"output/インクルーシブ大会レーン順_{EVENT_NO}.xlsx"
 
 
 # ==========================================
@@ -143,8 +184,6 @@ class LaneWriter:
     ROWS_PER_SIDE = 56
 
     # 最初のデータ行
-    START_ROW = 2
-
     def __init__(self, ws, columns, programs):
 
         self.ws = ws
@@ -306,20 +345,21 @@ class LaneWriter:
                 offset,
                 data["class"]
             )
+            if PARA_MODE == 1:
 
-            self.write(
-                "St",
-                row,
-                offset,
-                data["st"]
-            )
+                self.write(
+                    "St",
+                    row,
+                    offset,
+                    data["st"]
+                )
 
-            self.write(
-                "CoE",
-                row,
-                offset,
-                data["coe"]
-            )
+                self.write(
+                    "CoE",
+                    row,
+                    offset,
+                    data["coe"]
+                )
 
         self.used += 1
 
@@ -442,12 +482,15 @@ class LaneWriter:
 # メイン
 # ==========================================
 
+
 def main():
 
-    # --------------------------------------
-    # SQL実行
-    # --------------------------------------
+    print(f"大会番号: {EVENT_NO}")
+    print(f"開始行: {START_ROW}")
+    print(f"Para mode: {PARA_MODE}")
+    print(f"SQL Server: {DB['server']}")
 
+    # SQL実行
     records = execute(SQL, EVENT_NO)
 
     print(f"レーンデータ: {len(records)} records")
@@ -461,7 +504,6 @@ def main():
         EVENT_NO
     )
 
-    # 競技情報辞書
     programs = {}
 
     for r in program_records:
@@ -472,24 +514,19 @@ def main():
             "kumiCount": r["kumiCount"],
         }
 
-    # ゼロコース使用は大会内で固定
     zero_values = {
         p["zeroLane"]
         for p in programs.values()
     }
 
     if len(zero_values) != 1:
-
         raise ValueError(
             "ゼロコース使用が競技間で一致していません。"
         )
 
     print(f"競技数: {len(programs)}")
 
-    # --------------------------------------
     # Excel読み込み
-    # --------------------------------------
-
     wb = load_workbook(TEMPLATE_FILE)
 
     ws = wb["Sheet1"]
@@ -502,10 +539,10 @@ def main():
         programs
     )
 
-    # --------------------------------------
-    # 競技番号ごとに処理
-    # --------------------------------------
+    # 開始行を設定
+    writer.START_ROW = START_ROW
 
+    # 競技番号ごとに処理
     for prgNo, prg_records in groupby(
         records,
         key=lambda x: x["prgNo"]
@@ -514,10 +551,6 @@ def main():
         prg_records = list(prg_records)
 
         prg = prg_records[0]
-
-        # ----------------------------------
-        # 組ごとに辞書を作る
-        # ----------------------------------
 
         group_dict = {}
 
@@ -531,7 +564,6 @@ def main():
                 for r in group_records
             }
 
-        # 組番号は1から組数までとする
         kumi_count = programs[prgNo]["kumiCount"]
 
         missing = (
@@ -540,7 +572,6 @@ def main():
         )
 
         if missing:
-
             raise ValueError(
                 f"競技 {prgNo}: "
                 f"データが存在しない組があります: {sorted(missing)}"
@@ -557,18 +588,16 @@ def main():
             f"組数={kumi_count}"
         )
 
-        # ----------------------------------
-        # 書き込み
-        # ----------------------------------
-
         writer.write_program_groups(
             prg,
             groups
         )
 
-    # --------------------------------------
-    # 保存
-    # --------------------------------------
+    # 保存先ディレクトリがなければ作成
+    OUTPUT_FILE.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     wb.save(OUTPUT_FILE)
 

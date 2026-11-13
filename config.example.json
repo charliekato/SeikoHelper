@@ -1,0 +1,17 @@
+{
+    "database": {
+        "server": "localhost",
+        "database": "Sw",
+        "authentication": "Windows",
+        "username": "",
+        "password": ""
+    },
+
+    "lane_order": {
+        "event_no": 39,
+        "start_row": 5,
+        "para_mode": 1,
+        "template_file": "template/レーン順.xlsx",
+        "output_file": "output/レーン順.xlsx"
+    }
+}
