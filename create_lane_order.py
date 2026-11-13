@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 
 import pyodbc
+
 from openpyxl import load_workbook
 from openpyxl.styles import Side
 from copy import copy
-from pathlib import Path
+
+from itertools import groupby
+from openpyxl.utils.cell import coordinate_from_string
+from openpyxl.utils import column_index_from_string
 
 
 # ==========================================
 # 設定
 # ==========================================
 
-EVENT_NO = 39       # 大会番号
+EVENT_NO = 39
+
 CONNECTION_STR = (
     "DRIVER={ODBC Driver 18 for SQL Server};"
     "SERVER=localhost;"
@@ -19,6 +24,7 @@ CONNECTION_STR = (
     "Trusted_Connection=yes;"
     "TrustServerCertificate=yes;"
 )
+
 
 
 TEMPLATE_FILE = "template/インクルーシブ大会レーン順template.xlsx"
@@ -43,28 +49,23 @@ select
     性別 as gender,
     距離 as distance,
     種目 as style,
-    予決 as yoketsu,
-    リレーフラグ as relayFlag,
-    第1泳者 as first,
-    第2泳者 as second,
-    第3泳者 as third,
-    第4泳者 as forth
+    予決 as yoketsu
 from vレーン順
 where 大会番号=?
 order by prgNo, kumi, lane
 """
 
-SQL_LANE_INFO = """
-select MAXLANE
-from vプログラム
-where 大会番号=? and 表示用競技番号=?
-"""
 
-SQL_ZERO_LANE = """
-select distinct ゼロコース使用
+SQL_PROGRAM_INFO = """
+select
+    表示用競技番号 as prgNo,
+    MAXLANE as maxlane,
+    ゼロコース使用 as zeroLane,
+    組数 as kumiCount
 from vプログラム
 where 大会番号=?
 """
+
 
 # ==========================================
 # SQL実行
@@ -75,6 +76,7 @@ def execute(sql, *params):
     with pyodbc.connect(CONNECTION_STR) as conn:
 
         cur = conn.cursor()
+
         cur.execute(sql, *params)
 
         columns = [c[0] for c in cur.description]
@@ -86,7 +88,7 @@ def execute(sql, *params):
 
 
 # ==========================================
-# 名前付きセルから列番号を取得
+# 名前付きセルの列番号
 # ==========================================
 
 def get_columns(wb):
@@ -117,50 +119,51 @@ def get_columns(wb):
             defined_name.destinations
         )
 
-        from openpyxl.utils.cell import coordinate_from_string
-        from openpyxl.utils import column_index_from_string
+        col_letter, row = coordinate_from_string(
+            coordinate
+        )
 
-        col_letter, row = coordinate_from_string(coordinate)
-
-        result[name] = column_index_from_string(col_letter)
+        result[name] = column_index_from_string(
+            col_letter
+        )
 
     return result
 
 
 # ==========================================
-# Excelへの書き込み
+# LaneWriter
 # ==========================================
 
 class LaneWriter:
 
+    # ページ設定
     PAGE_ROWS = 61
+
+    # 左右それぞれの使用行数
     ROWS_PER_SIDE = 56
-    START_ROW = 5
 
-    TEMPLATE_PAGES = 8
+    # 最初のデータ行
+    START_ROW = 2
 
-    def __init__(self, ws, columns, maxlane_func, zero_lane):
+    def __init__(self, ws, columns, programs):
 
         self.ws = ws
         self.col = columns
+        self.programs = programs
 
+        # 右側への列オフセット
         self.offset = (
             self.col["氏名2"] - self.col["氏名"]
         )
 
-        self.maxlane_func = maxlane_func
-        self.zero_lane = zero_lane
-
-        # 段番号
-        # 0: 1ページ左
-        # 1: 1ページ右
-        # 2: 2ページ左 ...
+        # 左右・ページ位置
         self.segment = 0
 
         # 現在の段で使用した行数
         self.used = 0
 
-        self.last_prg = None
+        # テンプレートのページ数
+        self.pages = len(ws.row_breaks.brk) + 1
 
     # --------------------------------------
     # 現在位置
@@ -169,6 +172,7 @@ class LaneWriter:
     def position(self):
 
         page = self.segment // 2
+
         side = self.segment % 2
 
         row = (
@@ -190,7 +194,7 @@ class LaneWriter:
         return self.ROWS_PER_SIDE - self.used
 
     # --------------------------------------
-    # 段を進める
+    # 次の段へ
     # --------------------------------------
 
     def next_segment(self):
@@ -198,7 +202,7 @@ class LaneWriter:
         self.segment += 1
         self.used = 0
 
-        if self.segment >= self.TEMPLATE_PAGES * 2:
+        if self.segment >= self.pages * 2:
 
             raise ValueError(
                 "テンプレートのページ数を超えました。"
@@ -231,7 +235,7 @@ class LaneWriter:
         self.write("style", row, offset, data["style"])
         self.write("yoketsu", row, offset, data["yoketsu"])
 
-        # 上下に罫線
+        # 上下罫線
         side = Side(style="thin")
 
         start_col = self.col["kumi"] + offset
@@ -242,6 +246,7 @@ class LaneWriter:
             cell = self.ws.cell(row=row, column=col)
 
             border = copy(cell.border)
+
             border.top = side
             border.bottom = side
 
@@ -277,10 +282,14 @@ class LaneWriter:
         # レーン番号は必ず書く
         self.write("lane", row, offset, lane)
 
-        # 空きレーンならここで終了
         if data is not None:
 
-            self.write("氏名", row, offset, data["name"])
+            self.write(
+                "氏名",
+                row,
+                offset,
+                data["name"]
+            )
 
             belongsto = data["belongsto"]
 
@@ -291,153 +300,196 @@ class LaneWriter:
                 f"({belongsto})" if belongsto else ""
             )
 
-            self.write("クラス", row, offset, data["class"])
-            self.write("St", row, offset, data["st"])
-            self.write("CoE", row, offset, data["coe"])
+            self.write(
+                "クラス",
+                row,
+                offset,
+                data["class"]
+            )
+
+            self.write(
+                "St",
+                row,
+                offset,
+                data["st"]
+            )
+
+            self.write(
+                "CoE",
+                row,
+                offset,
+                data["coe"]
+            )
 
         self.used += 1
 
     # --------------------------------------
-    # 組の必要行数
+    # 1組に必要なレーン数
     # --------------------------------------
 
-    def group_rows(self, maxlane):
+    def lane_count(self, info):
 
-        first_lane = 0 if self.zero_lane else 1
+        first_lane = (
+            0 if info["zeroLane"] else 1
+        )
 
-        lane_count = maxlane - first_lane + 1
-
-        # 組番号1行 + 全レーン
-        return 1 + lane_count
-
-    # --------------------------------------
-    # 組を出力
-    # --------------------------------------
-
-    def write_group(self, kumi, swimmers, maxlane,
-                    new_program=False):
-
-        # 組間の空行
-        blank_rows = 0 if new_program else 1
-
-        needed = blank_rows + self.group_rows(maxlane)
-
-        # 現在の段に収まるか確認
-        if needed > self.remaining():
-
-            self.next_segment()
-
-            # 段が変わった場合は競技ヘッダーを再表示
-            # 新しい段でも競技番号が分かるようにする
-            if self.last_prg is not None:
-
-                self.write_program(self.current_program)
-
-            needed = self.group_rows(maxlane)
-
-        if needed > self.remaining():
-
-            raise ValueError(
-                f"{kumi}組が1段に収まりません。"
-            )
-
-        # 組間の空行
-        self.used += blank_rows
-
-        # 組番号
-        self.write_kumi(kumi)
-
-        # 全レーンを出力
-        first_lane = 0 if self.zero_lane else 1
-
-        for lane in range(first_lane, maxlane + 1):
-
-            self.write_lane(
-                lane,
-                swimmers.get(lane)
-            )
+        return info["maxlane"] - first_lane + 1
 
     # --------------------------------------
-    # 競技単位の処理
+    # 1組に必要な行数
+    # --------------------------------------
+
+    def group_rows(self, info):
+
+        return 1 + self.lane_count(info)
+
+    # --------------------------------------
+    # 競技・組の書き込み
     # --------------------------------------
 
     def write_program_groups(self, prg, groups):
 
-        self.current_program = prg
-        self.last_prg = prg["prgNo"]
+        info = self.programs[prg["prgNo"]]
 
-        maxlane = self.maxlane_func(prg["prgNo"])
+        maxlane = info["maxlane"]
 
-        first = True
+        first_lane = (
+            0 if info["zeroLane"] else 1
+        )
 
-        for kumi, swimmers in groups:
+        # 組数
+        kumi_count = info["kumiCount"]
 
-            # 最初の組はヘッダーも必要
-            if first:
+        if len(groups) != kumi_count:
 
-                needed = 1 + self.group_rows(maxlane)
+            raise ValueError(
+                f"競技 {prg['prgNo']}: "
+                f"vレーン順の組数({len(groups)})と"
+                f"vプログラムの組数({kumi_count})が一致しません。"
+            )
 
-                if needed > self.remaining():
-                    self.next_segment()
+        # ----------------------------------
+        # 組ごとに処理
+        # ----------------------------------
+
+        for index, (kumi, swimmers) in enumerate(groups):
+
+            # 最終組かどうか
+            last_kumi = (
+                index == kumi_count - 1
+            )
+
+            # 組の後の空白
+            gap = 2 if last_kumi else 3
+
+            # 組番号 + 全レーン + 空白
+            needed = (
+                self.group_rows(info)
+                + gap
+            )
+
+            # 競技ヘッダーが必要か
+            need_header = (
+                index == 0
+                or self.used == 0
+            )
+
+            if need_header:
+                needed += 1
+
+            # 現在の段に収まるか
+            if needed > self.remaining():
+
+                self.next_segment()
+
+                # 新しい段ではヘッダーが必要
+                need_header = True
+
+                needed = (
+                    1
+                    + self.group_rows(info)
+                    + gap
+                )
+
+            if needed > self.remaining():
+
+                raise ValueError(
+                    f"競技 {prg['prgNo']} "
+                    f"{kumi}組が1段に収まりません。"
+                )
+
+            # 競技ヘッダー
+            if need_header:
 
                 self.write_program(prg)
 
-                self.write_group(
-                    kumi,
-                    swimmers,
-                    maxlane,
-                    new_program=True
+            # 組番号
+            self.write_kumi(kumi)
+
+            # 全レーン
+            for lane in range(first_lane, maxlane + 1):
+
+                self.write_lane(
+                    lane,
+                    swimmers.get(lane)
                 )
 
-                first = False
+            # 組間の空白
+            self.used += gap
 
-            else:
 
-                self.write_group(
-                    kumi,
-                    swimmers,
-                    maxlane
-                )
 # ==========================================
 # メイン
 # ==========================================
 
-from itertools import groupby
-
-
 def main():
 
+    # --------------------------------------
     # SQL実行
+    # --------------------------------------
+
     records = execute(SQL, EVENT_NO)
 
-    print(f"{len(records)} records")
+    print(f"レーンデータ: {len(records)} records")
 
     if not records:
         print("データがありません。")
         return
 
-    # ゼロコース使用
-    zero = execute(SQL_ZERO_LANE, EVENT_NO)
+    program_records = execute(
+        SQL_PROGRAM_INFO,
+        EVENT_NO
+    )
 
-    zero_lane = bool(zero[0]["ゼロコース使用"])
+    # 競技情報辞書
+    programs = {}
 
-    # MAXLANE取得関数
-    def get_maxlane(prgNo):
+    for r in program_records:
 
-        result = execute(
-            SQL_LANE_INFO,
-            EVENT_NO,
-            prgNo
+        programs[r["prgNo"]] = {
+            "maxlane": r["maxlane"],
+            "zeroLane": r["zeroLane"],
+            "kumiCount": r["kumiCount"],
+        }
+
+    # ゼロコース使用は大会内で固定
+    zero_values = {
+        p["zeroLane"]
+        for p in programs.values()
+    }
+
+    if len(zero_values) != 1:
+
+        raise ValueError(
+            "ゼロコース使用が競技間で一致していません。"
         )
 
-        if not result:
-            raise ValueError(
-                f"競技番号 {prgNo} のMAXLANEが取得できません。"
-            )
+    print(f"競技数: {len(programs)}")
 
-        return result[0]["MAXLANE"]
-
+    # --------------------------------------
     # Excel読み込み
+    # --------------------------------------
+
     wb = load_workbook(TEMPLATE_FILE)
 
     ws = wb["Sheet1"]
@@ -447,13 +499,12 @@ def main():
     writer = LaneWriter(
         ws,
         columns,
-        get_maxlane,
-        zero_lane
+        programs
     )
 
-    # ----------------------------------
+    # --------------------------------------
     # 競技番号ごとに処理
-    # ----------------------------------
+    # --------------------------------------
 
     for prgNo, prg_records in groupby(
         records,
@@ -464,32 +515,65 @@ def main():
 
         prg = prg_records[0]
 
-        # 組ごとにまとめる
-        groups = []
+        # ----------------------------------
+        # 組ごとに辞書を作る
+        # ----------------------------------
+
+        group_dict = {}
 
         for kumi, group_records in groupby(
             prg_records,
             key=lambda x: x["kumi"]
         ):
 
-            swimmers = {
+            group_dict[kumi] = {
                 r["lane"]: r
                 for r in group_records
             }
 
-            groups.append((kumi, swimmers))
+        # 組番号は1から組数までとする
+        kumi_count = programs[prgNo]["kumiCount"]
 
-        # 競技単位で書き込み
+        missing = (
+            set(range(1, kumi_count + 1))
+            - set(group_dict)
+        )
+
+        if missing:
+
+            raise ValueError(
+                f"競技 {prgNo}: "
+                f"データが存在しない組があります: {sorted(missing)}"
+            )
+
+        groups = [
+            (kumi, group_dict[kumi])
+            for kumi in range(1, kumi_count + 1)
+        ]
+
+        print(
+            f"PrgNo={prgNo}, "
+            f"MAXLANE={programs[prgNo]['maxlane']}, "
+            f"組数={kumi_count}"
+        )
+
+        # ----------------------------------
+        # 書き込み
+        # ----------------------------------
+
         writer.write_program_groups(
             prg,
             groups
         )
 
+    # --------------------------------------
     # 保存
+    # --------------------------------------
+
     wb.save(OUTPUT_FILE)
 
+    print()
     print(f"Saved: {OUTPUT_FILE}")
-
 
 
 if __name__ == "__main__":
