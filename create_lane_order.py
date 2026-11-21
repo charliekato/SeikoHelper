@@ -90,7 +90,8 @@ select
     性別 as gender,
     距離 as distance,
     種目 as style,
-    予決 as yoketsu
+    予決 as yoketsu,
+    時間 as startTime
 from vレーン順
 where 大会番号=?
 order by prgNo, kumi, lane
@@ -140,6 +141,7 @@ def get_columns(wb):
         "distance",
         "style",
         "yoketsu",
+        "時間",
         "kumi",
         "lane",
         "氏名",
@@ -148,6 +150,7 @@ def get_columns(wb):
         "St",
         "CoE",
         "氏名2",
+        "EndOfLine",
     ]
 
     result = {}
@@ -251,14 +254,31 @@ class LaneWriter:
     # セル書き込み
     # --------------------------------------
 
-    def write(self, name, row, offset, value):
+    def write(self, name, row, offset, value, 
+              font_size=None,horizontal=None,vertical="center"):
 
         col = self.col[name] + offset
 
-        self.ws.cell(
+        cell=self.ws.cell(
             row=row,
             column=col
-        ).value = value
+        )
+        cell.value = value
+        if font_size is not None:
+            font = copy(cell.font)
+            font.sz = font_size
+            cell.font = font
+        
+        if horizontal is not None or vertical is not None:
+            alignment = copy(cell.alignment)
+
+            if horizontal is not None:
+                alignment.horizontal = horizontal
+
+            if vertical is not None:
+                alignment.vertical = vertical
+
+            cell.alignment = alignment
 
     # --------------------------------------
     # 競技ヘッダー
@@ -268,17 +288,18 @@ class LaneWriter:
 
         row, offset = self.position()
 
-        self.write("PrgNo", row, offset, data["prgNo"])
-        self.write("gender", row, offset, data["gender"])
-        self.write("distance", row, offset, data["distance"])
-        self.write("style", row, offset, data["style"])
-        self.write("yoketsu", row, offset, data["yoketsu"])
+        self.write("PrgNo", row, offset, data["prgNo"],8)
+        self.write("gender", row, offset, data["gender"],8)
+        self.write("distance", row, offset, data["distance"],8)
+        self.write("style", row, offset, data["style"],8)
+        self.write("yoketsu", row, offset, data["yoketsu"],8)
+        self.write("時間", row, offset,  data["startTime"],8)
 
         # 上下罫線
         side = Side(style="thin")
 
         start_col = self.col["kumi"] + offset
-        end_col = self.col["CoE"] + offset
+        end_col = self.col["EndOfLine"] + offset
 
         for col in range(start_col, end_col + 1):
 
@@ -305,7 +326,7 @@ class LaneWriter:
             "kumi",
             row,
             offset,
-            f"{kumi}組"
+            f"{kumi}組",8
         )
 
         self.used += 1
@@ -319,7 +340,7 @@ class LaneWriter:
         row, offset = self.position()
 
         # レーン番号は必ず書く
-        self.write("lane", row, offset, lane)
+        self.write("lane", row, offset, lane,8)
 
         if data is not None:
 
@@ -327,7 +348,7 @@ class LaneWriter:
                 "氏名",
                 row,
                 offset,
-                data["name"]
+                data["name"],8
             )
 
             belongsto = data["belongsto"]
@@ -336,14 +357,15 @@ class LaneWriter:
                 "所属",
                 row,
                 offset,
-                f"({belongsto})" if belongsto else ""
+                f"({belongsto})" if belongsto else "",
+                font_size=7 if len(belongsto)>12 else 8
             )
 
             self.write(
                 "クラス",
                 row,
                 offset,
-                data["class"]
+                data["class"],8
             )
             if PARA_MODE == 1:
 
@@ -351,14 +373,14 @@ class LaneWriter:
                     "St",
                     row,
                     offset,
-                    data["st"]
+                    data["st"],8,"left"
                 )
 
                 self.write(
                     "CoE",
                     row,
                     offset,
-                    data["coe"]
+                    data["coe"],8
                 )
 
         self.used += 1
