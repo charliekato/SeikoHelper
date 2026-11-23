@@ -36,6 +36,7 @@
             rdbTateMochi = new RadioButton();
             labelWinnerList = new Label();
             lblExtractNewRecord = new Label();
+            lblRunPaperSokuho = new Label();
             SuspendLayout();
             // 
             // labelMenu
@@ -133,11 +134,24 @@
             lblExtractNewRecord.Text = "新記録管理";
             lblExtractNewRecord.Click += lblExtractNewRecord_Click;
             // 
+            // lblRunPaperSokuho
+            // 
+            lblRunPaperSokuho.AutoSize = true;
+            lblRunPaperSokuho.Font = new Font("Yu Gothic UI", 12F);
+            lblRunPaperSokuho.Location = new Point(102, 465);
+            lblRunPaperSokuho.Margin = new Padding(4, 0, 4, 0);
+            lblRunPaperSokuho.Name = "lblRunPaperSokuho";
+            lblRunPaperSokuho.Size = new Size(244, 32);
+            lblRunPaperSokuho.TabIndex = 12;
+            lblRunPaperSokuho.Text = "帳票作成(競技別結果)";
+            lblRunPaperSokuho.Click += lblRunPaperSokuho_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1015, 660);
+            Controls.Add(lblRunPaperSokuho);
             Controls.Add(labelWinnerList);
             Controls.Add(rdbTateMochi);
             Controls.Add(rdbYokoMochi);
@@ -163,5 +177,6 @@
         private RadioButton rdbTateMochi;
         private Label labelWinnerList;
         private Label lblExtractNewRecord;
+        private Label lblRunPaperSokuho;
     }
 }

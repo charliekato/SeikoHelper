@@ -17,11 +17,11 @@ namespace SeikoHelper
 
         private void lblExtractNewRecord_Click(object sender, EventArgs e)
         {
-            NewRecordManager newRecordManager = new NewRecordManager(); 
+            NewRecordManager newRecordManager = new NewRecordManager();
             newRecordManager.Show();
         }
 
-        
+
         private void labelEntryList_Click(object sender, EventArgs e)
         {
             Cursor? previousCursor = Cursor.Current;
@@ -85,7 +85,7 @@ namespace SeikoHelper
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = sfd.FileName;
-                    WinnerList.CreateWinnerList(GlobalV.ServerName, GlobalV.EventNo,templatePath, filePath);
+                    WinnerList.CreateWinnerList(GlobalV.ServerName, GlobalV.EventNo, templatePath, filePath);
                 }
             }
             finally
@@ -96,5 +96,11 @@ namespace SeikoHelper
 
         }
 
+        private void lblRunPaperSokuho_Click(object sender, EventArgs e)
+        {
+
+            PaperSokuho paperSokuho = new PaperSokuho();
+            paperSokuho.Show();
+        }
     }
 }

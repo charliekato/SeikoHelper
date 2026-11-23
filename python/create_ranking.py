@@ -7,7 +7,7 @@ from openpyxl import load_workbook
 
 # ===== 設定 =====
 
-TEMPLATE = "種目別競技結果template.xlsx"
+TEMPLATE = "template/種目別競技結果template.xlsx"
 lapinterval = 4
 
 # SQL Server 接続文字列
@@ -108,11 +108,11 @@ def main():
     ws.cell(性別row, 性別col).value = row.性別
     ws.cell(予決row, 予決col).value = row.予決
     lapunit = row.LAPUNIT
-    s1500 = get_cell_info(wb,ws,"L1500start")
-    s800 = get_cell_info(wb,ws,"L800start")
-    s400 = get_cell_info(wb,ws,"L400start")
-    s200 = get_cell_info(wb,ws,"L200start")
-    s100 = get_cell_info(wb,ws,"L100start")
+    s1500 = get_cell_info(wb,ws,"L1500start")[1]
+    s800 = get_cell_info(wb,ws,"L800start")[1]
+    s400 = get_cell_info(wb,ws,"L400start")[1]
+    s200 = get_cell_info(wb,ws,"L200start")[1]
+    s100 = get_cell_info(wb,ws,"L100start")[1]
 
 
 
@@ -184,20 +184,20 @@ def main():
                             ws.cell(excel_row+1, s800+i*lapinterval).value = row[i*2+1]
                             ws.cell(excel_row+2, s800+i*lapinterval).value = row[i*2+17]
                     case " 400m" :
-                        for i in tange(0,8):
+                        for i in range(0,8):
                             ws.cell(excel_row+1, s400+i*lapinterval).value = row[i*2+1]
                     case " 200m" :
-                        for i in tange(0,4):
+                        for i in range(0,4):
                             ws.cell(excel_row+1, s200+i*lapinterval).value = row[i*2+1]
                     case " 100m" :
-                        for i in tange(0,2):
+                        for i in range(0,2):
                             ws.cell(excel_row+1, s100+i*lapinterval).value = row[i*2+1]
 
 
 
 
     # 保存
-    output = f"ランキング{eventNo}_{prgNo}.xlsx"
+    output = f"output/ランキング{eventNo}_{prgNo}.xlsx"
     wb.save(output)
 
     print(f"{output} を作成しました。")
