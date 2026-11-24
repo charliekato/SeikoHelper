@@ -46,7 +46,7 @@ namespace CreateEntryList
             string path = Path.Combine(
                     Environment.GetFolderPath(
                         Environment.SpecialFolder.LocalApplicationData),
-                    "SeikoHelper", "config.json");
+                    "SeikoHelper", "CreateEntryList.config");
             Console.WriteLine($"path --> {path}");
             string json = File.ReadAllText(path);
             AppConfig config = 

@@ -56,7 +56,7 @@ namespace SeikoHelper
                         Environment.SpecialFolder.LocalApplicationData
                         ),
                     "SeikoHelper",
-                    "config.json"
+                    "CreateEntryList.config"
                     );
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             //JSON‚É•ÏŠ·‚µ‚Ä•Û‘¶
