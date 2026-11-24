@@ -1,3 +1,4 @@
+using System.Diagnostics;
 namespace SeikoHelper
 {
     public partial class MainForm : Form
@@ -24,28 +25,42 @@ namespace SeikoHelper
 
         private void labelEntryList_Click(object sender, EventArgs e)
         {
+            string tateFlag="false";
             Cursor? previousCursor = Cursor.Current;
-            if (rdbTateMochi.Checked) { EntryList.tateFlag = true; }
+            if (rdbTateMochi.Checked) { tateFlag = "true"; }
 
             try
             {
-                // ˆ—’†ƒJ[ƒ\ƒ‹iWaitCursorj‚ğİ’è
+                // å‡¦ç†ä¸­ã‚«ãƒ¼ã‚½ãƒ«ï¼ˆWaitCursorï¼‰ã‚’è¨­å®š
                 SaveFileDialog sfd = new SaveFileDialog();
-                sfd.Title = "•Û‘¶æ‚Ìƒtƒ@ƒCƒ‹‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢";
-                sfd.Filter = "ƒGƒNƒZƒ‹ƒtƒ@ƒCƒ‹ (*.xlsx)|*.xlsx|‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹ (*.*)|*.*";
+                sfd.Title = "ä¿å­˜å…ˆã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é¸æŠã—ã¦ãã ã•ã„";
+                sfd.Filter = "ã‚¨ã‚¯ã‚»ãƒ«ãƒ•ã‚¡ã‚¤ãƒ« (*.xlsx)|*.xlsx|ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ« (*.*)|*.*";
                 sfd.DefaultExt = "xlsx";
 
                 Cursor.Current = Cursors.WaitCursor;
-                //EntryList.CreateEntryList(textBoxEntryList.Text);
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = sfd.FileName;
-                    EntryList.CreateEntryList(filePath);
+                    var psi = new ProcessStartInfo 
+                    {
+                        FileName = Path.Combine(
+                                AppContext.BaseDirectory, "..", "CreateEntryList", "bin", "CreateEntryList.exe" ),
+                        Arguments = $"{filePath} {(GlobalV.EventNo).ToString()} {tateFlag}",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using var process = Process.Start(psi);
+                    process.WaitForExit();
+                    if (process.ExitCode != 0)
+                    {
+                        MessageBox.Show("Errors in CreateEntryList");
+                    }
+
                 }
             }
             finally
             {
-                // ƒJ[ƒ\ƒ‹‚ğŒ³‚É–ß‚·
+                // ã‚«ãƒ¼ã‚½ãƒ«ã‚’å…ƒã«æˆ»ã™
                 Cursor.Current = previousCursor;
             }
 
@@ -59,12 +74,12 @@ namespace SeikoHelper
         private void labelWinnerList_Click(object sender, EventArgs e)
         {
             Cursor? previousCursor = Cursor.Current;
-            // ƒeƒ“ƒvƒŒ[ƒg‘I‘ğ
-            MessageBox.Show("Ÿ‚Ì‰æ–Ê‚Åƒeƒ“ƒvƒŒ[ƒg Excel ‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B", "ƒeƒ“ƒvƒŒ[ƒg‘I‘ğ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆé¸æŠ
+            MessageBox.Show("æ¬¡ã®ç”»é¢ã§ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆ Excel ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚", "ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆé¸æŠ", MessageBoxButtons.OK, MessageBoxIcon.Information);
             string templatePath;
             using (var ofd = new OpenFileDialog())
             {
-                ofd.Title = "ƒeƒ“ƒvƒŒ[ƒg Excel ‚ğ‘I‘ğ";
+                ofd.Title = "ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆ Excel ã‚’é¸æŠ";
                 ofd.Filter = "Excel Files (*.xlsx)|*.xlsx";
 
                 if (ofd.ShowDialog() != DialogResult.OK)
@@ -74,10 +89,10 @@ namespace SeikoHelper
             }
             try
             {
-                // ˆ—’†ƒJ[ƒ\ƒ‹iWaitCursorj‚ğİ’è
+                // å‡¦ç†ä¸­ã‚«ãƒ¼ã‚½ãƒ«ï¼ˆWaitCursorï¼‰ã‚’è¨­å®š
                 SaveFileDialog sfd = new SaveFileDialog();
-                sfd.Title = "•Û‘¶æ‚Ìƒtƒ@ƒCƒ‹‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢";
-                sfd.Filter = "ƒGƒNƒZƒ‹ƒtƒ@ƒCƒ‹ (*.xlsx)|*.xlsx|‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹ (*.*)|*.*";
+                sfd.Title = "ä¿å­˜å…ˆã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é¸æŠã—ã¦ãã ã•ã„";
+                sfd.Filter = "ã‚¨ã‚¯ã‚»ãƒ«ãƒ•ã‚¡ã‚¤ãƒ« (*.xlsx)|*.xlsx|ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ« (*.*)|*.*";
                 sfd.DefaultExt = "xlsx";
 
                 Cursor.Current = Cursors.WaitCursor;
@@ -90,7 +105,7 @@ namespace SeikoHelper
             }
             finally
             {
-                // ƒJ[ƒ\ƒ‹‚ğŒ³‚É–ß‚·
+                // ã‚«ãƒ¼ã‚½ãƒ«ã‚’å…ƒã«æˆ»ã™
                 Cursor.Current = previousCursor;
             }
 

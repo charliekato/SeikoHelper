@@ -3,19 +3,58 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using ClosedXML.Excel;
 using System.Diagnostics;
+using System.Text.Json;
 
 
-namespace SeikoHelper
+namespace CreateEntryList
 {
 
-    class EntryList
+    public class AppConfig
     {
-        static public bool tateFlag;
-        public static void CreateEntryList(string fileName)
+        public string ConStr { get; set; }="";
+    }
+    class Program
+    {
+        static void usage() {
+            Console.WriteLine(@"Usage: 
+                    CreateEntryList OutputFileName eventNo (tateFlag)
+                    ");
+        }
+
+        static int Main(string[] args)
         {
+            bool tateFlag = false;
+            if (args.Length < 2)
+            {
+                usage();
+                return 1;
+            }
+            if (args.Length == 3) {
+                tateFlag = bool.Parse(args[2]);
+            }
+            string fileName = args[0];
+            int eventNo = int.Parse(args[1]);
+            Console.WriteLine($" eventNo: {eventNo}  fileName : {fileName}");
+        
+            CreateEntryList(fileName,eventNo, tateFlag);
+            return 0;
+        }
+
+
+        public static void CreateEntryList(string fileName,int eventNo,bool tateFlag)
+        {
+            string path = Path.Combine(
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder.LocalApplicationData),
+                    "SeikoHelper", "config.json");
+            Console.WriteLine($"path --> {path}");
+            string json = File.ReadAllText(path);
+            AppConfig config = 
+                JsonSerializer.Deserialize<AppConfig>(json)
+                ?? throw new Exception("config.json の読み込みに失敗");
+            string conString = config.ConStr;
             // 保存先のフルパス（任意で変更可）
-            string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            //string folderPath = "C:\\Users\\user";
+            string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string fullPath = Path.Combine(folderPath, fileName);
 
             // フォルダがなければ作成
@@ -155,7 +194,7 @@ where リレーチーム.大会番号 = @eventNo
             {
                 var worksheet = workbook.Worksheets.Add("個人種目");
                 var worksheet2 = workbook.Worksheets.Add("リレー種目");
-                using (var conn = new SqlConnection(GlobalV.ConnectionString))
+                using (var conn = new SqlConnection(conString))
                 {
                     if (tateFlag) sql = sqlTate;
                     else sql = sqlYoko;
@@ -163,7 +202,7 @@ where リレーチーム.大会番号 = @eventNo
                     {
                         using (var adapter = new SqlDataAdapter(cmd))
                         {
-                            cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                            cmd.Parameters.AddWithValue("@eventNo", eventNo);
 
                             var dt = new DataTable();
                             adapter.Fill(dt);
@@ -192,7 +231,7 @@ where リレーチーム.大会番号 = @eventNo
                     {
                         using (var adapter = new SqlDataAdapter(cmd))
                         {
-                            cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                            cmd.Parameters.AddWithValue("@eventNo", eventNo);
 
                             var dt = new DataTable();
                             adapter.Fill(dt);

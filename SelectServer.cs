@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using System.Text.Json;
 namespace SeikoHelper
 {
     public partial class SelectServer : Form
@@ -36,6 +37,7 @@ namespace SeikoHelper
             }
             if (ServerAccessOK())
             {
+                SaveConfig();
                 SelectEvent selEventForm = new SelectEvent();
                 selEventForm.Show();
             }
@@ -43,6 +45,26 @@ namespace SeikoHelper
             {
                 MessageBox.Show("Could not access the server.", "!!ERROR!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+        static private void SaveConfig() {
+            var config = new AppConfig {
+                ConStr=GlobalV.ConnectionString            
+            };
+
+            string path = Path.Combine(
+                Environment.GetFolderPath(
+                        Environment.SpecialFolder.LocalApplicationData
+                        ),
+                    "SeikoHelper",
+                    "config.json"
+                    );
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            //JSON‚É•ÏŠ·‚µ‚Ä•Û‘¶
+            var options = new JsonSerializerOptions {
+                WriteIndented = true
+            };
+            string json = JsonSerializer.Serialize(config, options);
+            File.WriteAllText(path, json);
           
         }
         static public bool ServerAccessOK()

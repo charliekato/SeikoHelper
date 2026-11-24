@@ -14,6 +14,9 @@
             Application.Run(new SelectServer());
         }
     }
+    public class AppConfig {
+        public string ConStr { get; set; } ="";
+    }
     public static class GlobalV
     {
         public static int EventNo;
