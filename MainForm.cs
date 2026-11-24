@@ -41,10 +41,13 @@ namespace SeikoHelper
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = sfd.FileName;
+                    string homeDir = Environment.GetFolderPath(
+                                Environment.SpecialFolder.UserProfile
+                            );
                     var psi = new ProcessStartInfo 
                     {
-                        FileName = Path.Combine(
-                                AppContext.BaseDirectory, "..", "CreateEntryList", "bin", "CreateEntryList.exe" ),
+                        FileName = Path.Combine( homeDir, "bin",
+                                "CreateEntryList", "CreateEntryList.exe" ),
                         Arguments = $"{filePath} {(GlobalV.EventNo).ToString()} {tateFlag}",
                         UseShellExecute = false,
                         CreateNoWindow = true
