@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace SeikoHelper
+namespace GodoCreater
 {
     public partial class MainMenu : Form
     {
@@ -31,8 +31,8 @@ namespace SeikoHelper
         private void buttonExe_Click(object sender, EventArgs e)
         {
             string myMessage = "";
-            GlobalV.Strategy1 = checkBoxStrategy1.Checked;
-            GlobalV.Strategy2 = checkBoxStrategy2.Checked;
+            GoDogen.Strategy1 = checkBoxStrategy1.Checked;
+            GoDogen.Strategy2 = checkBoxStrategy2.Checked;
             GoDogen.PrepareGO();
             if (checkBoxScenario1.Checked)
             {
@@ -57,7 +57,7 @@ namespace SeikoHelper
             }
             if (checkBoxScenario5.Checked)
             {
-                ProgramMerger.MergePrograms(GlobalV.EventNo);
+                ProgramMerger.MergePrograms(GoDogen.EventNo);
                 myMessage += "クラス無差別で競技再編成";
             }
             MessageBox.Show(myMessage + "終了");

@@ -25,12 +25,12 @@ namespace SeikoHelper
             using (XLWorkbook workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add("発生大会記録");
-                using (var conn = new SqlConnection(GlobalV.ConnectionString))
+                using (var conn = new SqlConnection(GlobalV.config.ConnectionString))
                 {
                     using (SqlCommand cmd = new SqlCommand(myQuery, conn))
                     {
                         conn.Open();
-                        cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                        cmd.Parameters.AddWithValue("@eventNo", GlobalV.config.EventNo);
                         int excelRow = 2;
                         using (var dr = cmd.ExecuteReader())
                         {

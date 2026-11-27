@@ -1,6 +1,6 @@
 ﻿#define TRADITIONAL
 using Microsoft.Data.SqlClient;
-using Microsoft.Identity.Client;
+//using Microsoft.Identity.Client;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -8,16 +8,42 @@ using System.Diagnostics.Eventing.Reader;
 using System.DirectoryServices.ActiveDirectory;
 using System.Windows.Forms.VisualStyles;
 
-namespace SeikoHelper
+namespace GodoCreater
 {
+    
 
     public static class GoDogen
     {
+        public static string ConnectionString { get; set; } = string.Empty;
+        public static bool Strategy1 { get; set; } = false;
+        public static bool Strategy2 { get; set; } = false;
+        static int MaxKumi = 0;
+        static int MaxPrgNo = 0;
+        static int MaxUID = 0;
+        public static int EventNo { get; set; } = 0;
+        static int[] PrgNobyUID = [];
+        static int[]  ShumokubyPrgNo = [];
+        static int[] NumSwimmers = [];
+        static int[] NumSwimmersbyTID = [];
+        static int[] TIDarray = [];
+        static int[] DistancebyPrgNo = [];
+        static int[] UIDFromPrgNo = [];
+        static int[]  ClassbyPrgNo = [];
+        static int[]  GenderbyPrgNo = [];
+        static int[] Phase = [];
+        static int MaxLaneNo4Yosen = 0;
+        static int MaxLaneNo4TimeFinal = 0;
+        static int MaxLaneNo4Final = 0;
+        static int ZeroLaneUse = 0;
+
+
+
         private static string[] ShumokuTable = { "",
             "自由形","背泳ぎ","平泳ぎ", "バタフライ", "個人メドレー", "リレー", "メドレーリレー"};
         private static string[] DistanceTable = { "",
           "  25m" , "  50m" , " 100m" , " 200m" , " 400m" , " 800m" , "1500m"};
         private static string[] PHASENAME = { "", "予選", "準決勝", "タイム決勝", "Ｂ決勝", "Ａ決勝", "決勝", "スイムオフ" };
+        private static int GoDoClass = 0;
         public static void PrepareGO()
         {
             ReadEventDb();
@@ -39,25 +65,25 @@ namespace SeikoHelper
         {
             if (scenario4Flag)
             {
-                GlobalV.GoDoClass = GetOrCreateGodoClass();
+                GoDoClass = GetOrCreateGodoClass();
             }
 
             MoveSwimmerAll(scenario4Flag);
         }
         public static int GetRaceNo(int prgNo, int kumi) {
-            return (prgNo - 1) * GlobalV.MaxKumi + kumi - 1;
+            return (prgNo - 1) * MaxKumi + kumi - 1;
         }
 
         static bool GetNextRace(ref int prgNo, ref int kumi)
         {
             while(true) { 
                 kumi++;
-                if (kumi <=GlobalV.MaxKumi)
+                if (kumi <=MaxKumi)
                     if (HowManySwimmers(prgNo, kumi) > 0) return true;
 
                 kumi = 0;
                 prgNo++;
-                if (prgNo > GlobalV.MaxPrgNo) return false;
+                if (prgNo > MaxPrgNo) return false;
             }
         }
               /// <summary>
@@ -68,7 +94,7 @@ namespace SeikoHelper
         /// <returns></returns>
         static int HowManySwimmers(int prgNo, int kumi=1)
         {
-            using (SqlConnection myCon = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new SqlConnection(GoDogen.ConnectionString))
             {
                 string myQuery = @"SELECT  count(選手番号) as numSwimmer
                 FROM 記録 WHERE 組= @kumi  AND 競技番号=(
@@ -78,7 +104,7 @@ namespace SeikoHelper
                 myCon.Open();
                 using (SqlCommand myCommand = new SqlCommand(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@prgNo", prgNo);
                     myCommand.Parameters.AddWithValue("@kumi", kumi);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
@@ -98,7 +124,7 @@ namespace SeikoHelper
 
         static int HowManySwimmers(int prgNo )
         {
-            using (SqlConnection myCon = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new SqlConnection(GoDogen.ConnectionString))
             {
                 string myQuery = @"SELECT  count(1) as numSwimmer
                 FROM 記録 WHERE  競技番号=(
@@ -108,7 +134,7 @@ namespace SeikoHelper
                 myCon.Open();
                 using (SqlCommand myCommand = new SqlCommand(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@prgNo", prgNo);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
                     {
@@ -130,13 +156,13 @@ namespace SeikoHelper
             string className = "合同レース";
             string myQuery = "select クラス番号 FROM クラス WHERE クラス名称 = @className and 大会番号 = @eventNo ";
             int classNo=0; // for 合同レース
-            using (SqlConnection myCon = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new SqlConnection(GoDogen.ConnectionString))
             {
 
                 myCon.Open();
                 using (SqlCommand myCommand = new SqlCommand(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@className", className);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
                     {
@@ -152,7 +178,7 @@ namespace SeikoHelper
                 myQuery = "SELECT MAX(クラス番号) AS MAXCLASS FROM クラス where 大会番号 = @eventNo ";
                 using (SqlCommand myCommand = new SqlCommand(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
                     {
                         if (reader.Read())
@@ -168,7 +194,7 @@ namespace SeikoHelper
                     {
                         myCommand.Parameters.AddWithValue("@classNo", classNo);
                         myCommand.Parameters.AddWithValue("@className", className);
-                        myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                        myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                         myCommand.ExecuteNonQuery();
                     }
                 }
@@ -178,11 +204,11 @@ namespace SeikoHelper
 
         static void ReadEventDb() // read event table again to get maxlane and erolaneuse
         {
-            using (SqlConnection myCon = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new SqlConnection(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = "SELECT 使用水路予選, 使用水路タイム決勝, 使用水路決勝, ゼロコース使用 " +
-                                 "FROM 大会設定 WHERE 大会番号 = " + GlobalV.EventNo;
+                                 "FROM 大会設定 WHERE 大会番号 = " + EventNo;
 
                 using (SqlCommand myCommand = new SqlCommand(myQuery, myCon))
                 {
@@ -190,10 +216,10 @@ namespace SeikoHelper
                     {
                         if (reader.Read())
                         {
-                            GlobalV.MaxLaneNo4Yosen = Convert.ToInt32(reader["使用水路予選"]);
-                            GlobalV.MaxLaneNo4TimeFinal = Convert.ToInt32(reader["使用水路タイム決勝"]);
-                            GlobalV.MaxLaneNo4Final = Convert.ToInt32(reader["使用水路決勝"]);
-                            GlobalV.ZeroLaneUse = Convert.ToInt32(reader["ゼロコース使用"]);
+                            MaxLaneNo4Yosen = Convert.ToInt32(reader["使用水路予選"]);
+                            MaxLaneNo4TimeFinal = Convert.ToInt32(reader["使用水路タイム決勝"]);
+                            MaxLaneNo4Final = Convert.ToInt32(reader["使用水路決勝"]);
+                            ZeroLaneUse = Convert.ToInt32(reader["ゼロコース使用"]);
                         }
                     }
                 }
@@ -210,12 +236,12 @@ namespace SeikoHelper
             {
                 kumi++;
                 numSwimmer = HowManySwimmers(prgNo, kumi);
-                if (numSwimmer>0) GlobalV.NumSwimmers[GetRaceNo(prgNo, kumi)] = numSwimmer;
+                if (numSwimmer>0) NumSwimmers[GetRaceNo(prgNo, kumi)] = numSwimmer;
                 else
                 {
                     kumi = 0;
                     prgNo++;
-                    if (prgNo > GlobalV.MaxPrgNo) return;
+                    if (prgNo > MaxPrgNo) return;
                 }
 
             }
@@ -228,12 +254,12 @@ namespace SeikoHelper
             where 大会番号=@eventNo ";
             int maxPrgNo = 0;
 
-            using (SqlConnection conn = new SqlConnection( GlobalV.ConnectionString))
+            using (SqlConnection conn = new SqlConnection( GoDogen.ConnectionString))
             {
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand(myQuery, conn))
                 {
-                    cmd.Parameters.AddWithValue("@EventNo", GlobalV.EventNo);
+                    cmd.Parameters.AddWithValue("@EventNo", EventNo);
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
@@ -250,13 +276,13 @@ namespace SeikoHelper
             string myQuery = "select max(競技番号) as uid from プログラム where 大会番号= @eventNo" ;
             using (SqlCommand sqlCommand = new(myQuery, myConn))
             {
-                sqlCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                sqlCommand.Parameters.AddWithValue("@eventNo", EventNo);
 
                 using (SqlDataReader reader = sqlCommand.ExecuteReader())
                 {
                     if (reader.Read())
                     {
-                        GlobalV.MaxUID = Convert.ToInt32(reader["UID"]);
+                        MaxUID = Convert.ToInt32(reader["UID"]);
                     }
 ;
                 }
@@ -264,30 +290,30 @@ namespace SeikoHelper
             myQuery = "select max(表示用競技番号) as MaxPrgNo from プログラム where 大会番号= @eventNo";
             using (SqlCommand sqlCommand = new(myQuery, myConn))
             {
-                sqlCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                sqlCommand.Parameters.AddWithValue("@eventNo", EventNo);
 
                 using (SqlDataReader reader = sqlCommand.ExecuteReader())
                 {
                     if (reader.Read())
                     {
-                        GlobalV.MaxPrgNo = Convert.ToInt32(reader["MaxPrgNo"]);
+                        MaxPrgNo = Convert.ToInt32(reader["MaxPrgNo"]);
                     }
                 }
             }
             myQuery = "select max(組) as MaxKumi from 記録 where 大会番号= @eventNo";
             using (SqlCommand sqlCommand = new(myQuery, myConn))
             {
-                sqlCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                sqlCommand.Parameters.AddWithValue("@eventNo", EventNo);
 
                 using (SqlDataReader reader = sqlCommand.ExecuteReader())
                 {
                     if (reader.Read())
                     {
-                        GlobalV.MaxKumi = Convert.ToInt32(reader["MaxKumi"]);
+                        MaxKumi = Convert.ToInt32(reader["MaxKumi"]);
                     }
                 }
             }
-            GlobalV.ResizePrgArray();
+            ResizePrgArray();
         }
 
         static void SetTID()
@@ -301,7 +327,7 @@ namespace SeikoHelper
                     MessageBox.Show("debug");
 
                 }
-                if (GlobalV.TID[GetRaceNo(prgNo, kumi)] == 0)
+                if (TIDarray[GetRaceNo(prgNo, kumi)] == 0)
                     CheckIfTogetherable(prgNo, kumi);
             } while (GetNextRace(ref prgNo, ref kumi));
         }
@@ -315,30 +341,30 @@ namespace SeikoHelper
         static void CheckIfTogetherable(int prgNo, int kumi )
         {
             int subTotal=0;
-            if (subTotal == GlobalV.MaxLaneNo4TimeFinal) return;
+            if (subTotal == MaxLaneNo4TimeFinal) return;
             if (NextKumiExist(prgNo,kumi) ) return;
             int prevPrgNo;
             int prevKumi;
             int kumiSave=kumi;
             int TID = prgNo;
-            subTotal += GlobalV.NumSwimmers[GetRaceNo(prgNo, kumi)];
-            while ( subTotal < GlobalV.MaxLaneNo4TimeFinal)
+            subTotal += NumSwimmers[GetRaceNo(prgNo, kumi)];
+            while ( subTotal < MaxLaneNo4TimeFinal)
             {
                 prevPrgNo = prgNo;
                 prevKumi = kumi;
                 if (GetNextRace(ref prgNo, ref kumi))
                 {
-                    if (!GlobalV.Strategy2 && (kumi > 1 || prevKumi > 1)) return;
-                    if (!GlobalV.Strategy1 && (GlobalV.GenderbyPrgNo[prevPrgNo - 1] != GlobalV.GenderbyPrgNo[prgNo - 1])) return;
-                    if (GlobalV.DistancebyPrgNo[prevPrgNo - 1] != GlobalV.DistancebyPrgNo[prgNo - 1]) return;
-                    if (GlobalV.ShumokubyPrgNo[prevPrgNo - 1] != GlobalV.ShumokubyPrgNo[prgNo - 1]) return;
-                    if (GlobalV.Phase[prevPrgNo - 1] != GlobalV.Phase[prgNo - 1]) return;
-                    subTotal += GlobalV.NumSwimmers[GetRaceNo(prgNo, kumi)] ;
-                    if (subTotal <= GlobalV.MaxLaneNo4TimeFinal)
+                    if (!Strategy2 && (kumi > 1 || prevKumi > 1)) return;
+                    if (!Strategy1 && (GenderbyPrgNo[prevPrgNo - 1] != GenderbyPrgNo[prgNo - 1])) return;
+                    if (DistancebyPrgNo[prevPrgNo - 1] != DistancebyPrgNo[prgNo - 1]) return;
+                    if (ShumokubyPrgNo[prevPrgNo - 1] != ShumokubyPrgNo[prgNo - 1]) return;
+                    if (Phase[prevPrgNo - 1] != Phase[prgNo - 1]) return;
+                    subTotal += NumSwimmers[GetRaceNo(prgNo, kumi)] ;
+                    if (subTotal <= MaxLaneNo4TimeFinal)
                     {
-                        GlobalV.TID[GetRaceNo(prevPrgNo, prevKumi)] = TID;
-                        GlobalV.TID[GetRaceNo(prgNo, kumi)] = TID;
-                        GlobalV.NumSwimmersbyTID[GetRaceNo(TID, kumiSave)] = subTotal;
+                        TIDarray[GetRaceNo(prevPrgNo, prevKumi)] = TID;
+                        TIDarray[GetRaceNo(prgNo, kumi)] = TID;
+                        NumSwimmersbyTID[GetRaceNo(TID, kumiSave)] = subTotal;
                     }
                 }
                 else return;
@@ -359,7 +385,7 @@ namespace SeikoHelper
             while( GetNextRace(ref prgNo, ref kumi) )
             {
                 raceNo = GetRaceNo(prgNo, kumi);
-                thisTID = GlobalV.TID[raceNo];
+                thisTID = TIDarray[raceNo];
                 if (thisTID>0)
                 {
                     if (tid <thisTID)
@@ -367,12 +393,12 @@ namespace SeikoHelper
                         toPrgNo = prgNo;
                         toKumi = kumi;
 
-                        startLane = GetStartLane(GlobalV.NumSwimmersbyTID[raceNo]);
+                        startLane = GetStartLane(NumSwimmersbyTID[raceNo]);
                         tid = thisTID;
                     }
                     else
                     {
-                        startLane = startLane + GlobalV.NumSwimmers[GetRaceNo(prevPrgNo,prevKumi)];
+                        startLane = startLane + NumSwimmers[GetRaceNo(prevPrgNo,prevKumi)];
                     }
                     MoveSwimmer(prgNo,kumi, startLane);
                 }
@@ -383,14 +409,14 @@ namespace SeikoHelper
         }
         static void ChangeGender(int prgNo)
         {
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
                       update  プログラム set 性別コード=@gender where 表示用競技番号=@prgNo and 大会番号=@eventNo";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@prgNo", prgNo);
                     myCommand.Parameters.AddWithValue("@gender", 3); //混成
                     myCommand.ExecuteNonQuery();
@@ -399,14 +425,14 @@ namespace SeikoHelper
          }
         static void ChangeClass(int prgNo,int classNo)
         {
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
                       update  プログラム set クラス番号=@classNo where 表示用競技番号=@prgNo and 大会番号=@eventNo";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@prgNo", prgNo);
                     myCommand.Parameters.AddWithValue("@classNo", classNo);
                     myCommand.ExecuteNonQuery();
@@ -416,14 +442,14 @@ namespace SeikoHelper
         }
         static void DeleteProgram(int prgNo)
         {
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
                       delete  from プログラム where 表示用競技番号=@prgNo and 大会番号=@eventNo";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@prgNo", prgNo);
                     myCommand.ExecuteNonQuery();
                 }
@@ -439,7 +465,7 @@ namespace SeikoHelper
 /// <returns> returns 0 if the race does not exist or nobody occupied any lane.</returns>
         static int GetFirstLane(int prgNo, int kumi)
         {
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"select min(水路) as firstLane  from 記録
@@ -448,7 +474,7 @@ namespace SeikoHelper
                    and 選手番号>0";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@prgNo", prgNo);
                     myCommand.Parameters.AddWithValue("@kumi", kumi);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
@@ -472,7 +498,7 @@ namespace SeikoHelper
 /// <returns> returns 0 if the race does not exist or nobody occupied any lane.</returns>
         static int GetLastLane(int prgNo, int kumi)
         {
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @" select MAX(水路) as LastLane  from 記録
@@ -481,7 +507,7 @@ namespace SeikoHelper
                   and 選手番号>0 and 組=@kumi";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@prgNo", prgNo);
                     myCommand.Parameters.AddWithValue("@kumi", kumi);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
@@ -498,7 +524,7 @@ namespace SeikoHelper
         }
         static void MoveSwimmer(int prgNo, int kumi, int startLane)
         {
-            int uid = GlobalV.UIDFromPrgNo[prgNo-1];
+            int uid = UIDFromPrgNo[prgNo-1];
             int[] thisSwimmerID = new int[10];
             string[] entryTime = new string[10];
             Array.Fill(entryTime, string.Empty);
@@ -517,7 +543,7 @@ namespace SeikoHelper
             int lane;
             int scounter = 0;
             int maxScounter = 0;
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -525,7 +551,7 @@ namespace SeikoHelper
                         order by 水路";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@uid", uid);
                     myCommand.Parameters.AddWithValue("@kumi", kumi);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
@@ -554,8 +580,8 @@ namespace SeikoHelper
                     }
                 }
                 scounter = 0;
-                uid=GlobalV.UIDFromPrgNo[prgNo-1];
-                for (lane = 1; lane<=GlobalV.MaxLaneNo4TimeFinal;lane++)
+                uid=UIDFromPrgNo[prgNo-1];
+                for (lane = 1; lane<=MaxLaneNo4TimeFinal;lane++)
                 {
 
                     myQuery = @" Update 記録
@@ -572,7 +598,7 @@ namespace SeikoHelper
                     {
                         if (lane < startLane)
                         {
-                            myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                            myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                             myCommand.Parameters.AddWithValue("@sid", 0);
                             myCommand.Parameters.AddWithValue("@entryTime", "");
                             myCommand.Parameters.AddWithValue("@classNo", 0);
@@ -592,7 +618,7 @@ namespace SeikoHelper
                         else
                         {
 
-                            myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                            myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                             myCommand.Parameters.AddWithValue("@sid", thisSwimmerID[scounter]);
                             myCommand.Parameters.AddWithValue("@entryTime", entryTime[scounter]);
                             myCommand.Parameters.AddWithValue("@classNo", classNo[scounter]);
@@ -628,7 +654,7 @@ namespace SeikoHelper
                 {
                     if (kumi==1)
                     {
-                        if ( scenario4Flag ||( (nextKumi==1) &&  (GlobalV.GenderbyPrgNo[prgNo - 1] == GlobalV.GenderbyPrgNo[nextPrgNo - 1]) )) {
+                        if ( scenario4Flag ||( (nextKumi==1) &&  (GenderbyPrgNo[prgNo - 1] == GenderbyPrgNo[nextPrgNo - 1]) )) {
                             
                             MoveSwimmer(nextPrgNo, nextKumi, prgNo, kumi);
                             if (first)
@@ -637,8 +663,8 @@ namespace SeikoHelper
                                 if (!scenario4Flag)
                                     ChangeClass(prgNo,0);
                                 else
-                                    ChangeClass(prgNo,GlobalV.GoDoClass   );
-                                if (GlobalV.GenderbyPrgNo[prgNo - 1] != GlobalV.GenderbyPrgNo[nextPrgNo - 1])
+                                    ChangeClass(prgNo,GoDoClass   );
+                                if (GenderbyPrgNo[prgNo - 1] != GenderbyPrgNo[nextPrgNo - 1])
                                     ChangeGender(prgNo);
                             }
                             if (HowManySwimmers(nextPrgNo) == 0)
@@ -651,9 +677,9 @@ namespace SeikoHelper
                             if (HowManySwimmers(nextPrgNo, 2) == 0)
                             {
                                 MoveSwimmerReverse(prgNo, kumi, nextPrgNo, nextKumi);
-                                ChangeClass(nextPrgNo, GlobalV.GoDoClass);
+                                ChangeClass(nextPrgNo, GoDoClass);
                                 DeleteProgram(prgNo);
-                                if (GlobalV.GenderbyPrgNo[prgNo - 1] != GlobalV.GenderbyPrgNo[nextPrgNo - 1])
+                                if (GenderbyPrgNo[prgNo - 1] != GenderbyPrgNo[nextPrgNo - 1])
                                 {
                                     ChangeGender(nextPrgNo);
                                 }
@@ -674,8 +700,8 @@ namespace SeikoHelper
             if (prgNo1 == prgNo2) return false;
             int lastLane;
             int firstLane;
-            if (GlobalV.NumSwimmers[GetRaceNo(prgNo1, kumi1)] +
-                 GlobalV.NumSwimmers[GetRaceNo(prgNo2, kumi2)] > GlobalV.MaxLaneNo4TimeFinal) return false;
+            if (NumSwimmers[GetRaceNo(prgNo1, kumi1)] +
+                 NumSwimmers[GetRaceNo(prgNo2, kumi2)] > MaxLaneNo4TimeFinal) return false;
             lastLane = GetLastLane(prgNo1, kumi1);
             firstLane = GetFirstLane(prgNo2, kumi2);
             if (lastLane < firstLane) return true;
@@ -709,11 +735,11 @@ namespace SeikoHelper
         static void SetKumiToProgram(int prgNo, int kumi, SqlConnection myCon)
         {
             string setQuery = @"UPDATE プログラム SET 組数=@kumi WHERE 大会番号=@eventNo AND 競技番号=@uid ";
-            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+            int uid = UIDFromPrgNo[prgNo - 1];
 
             using (SqlCommand myCommand = new(setQuery, myCon))
             {
-                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = EventNo;
                 myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
                 myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
                 myCommand.ExecuteNonQuery();
@@ -723,11 +749,11 @@ namespace SeikoHelper
         static void DeleteRace(int prgNo, int kumi, SqlConnection myCon)
         {
             string delQuery = @"DELETE FROM 記録 WHERE 大会番号=@eventNo AND 競技番号=@uid AND 組=@kumi";
-            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+            int uid = UIDFromPrgNo[prgNo - 1];
 
             using (SqlCommand myCommand = new(delQuery, myCon))
             {
-                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = EventNo;
                 myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
                 myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
                 myCommand.ExecuteNonQuery();
@@ -746,11 +772,11 @@ namespace SeikoHelper
         static void DeleteLap(int prgNo, int kumi, SqlConnection myCon)
         {
             string delQuery = @"DELETE FROM ラップ WHERE 大会番号=@eventNo AND 競技番号=@uid AND 組=@kumi";
-            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+            int uid = UIDFromPrgNo[prgNo - 1];
 
             using (SqlCommand myCommand = new(delQuery, myCon))
             {
-                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = EventNo;
                 myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
                 myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
                 myCommand.ExecuteNonQuery();
@@ -769,10 +795,10 @@ namespace SeikoHelper
             string Query = @"UPDATE ラップ SET 組=@newKumi WHERE 大会番号=@eventNo AND
                        競技番号=@uid AND 組=@kumi";
 
-            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+            int uid = UIDFromPrgNo[prgNo - 1];
             using (SqlCommand myCommand = new(Query, myCon))
             {
-                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = EventNo;
                 myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
                 myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
                 myCommand.Parameters.Add("@newKumi", SqlDbType.Int).Value = kumi - 1;
@@ -786,10 +812,10 @@ namespace SeikoHelper
             string Query = @"UPDATE 記録 SET 組=@newKumi WHERE 大会番号=@eventNo AND
                        競技番号=@uid AND 組=@kumi";
 
-            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+            int uid = UIDFromPrgNo[prgNo - 1];
             using (SqlCommand myCommand = new(Query, myCon))
             {
-                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = EventNo;
                 myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
                 myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
                 myCommand.Parameters.Add("@newKumi", SqlDbType.Int).Value = kumi - 1;
@@ -801,10 +827,10 @@ namespace SeikoHelper
         {
             string Query = @"SELECT 1 FROM ラップ WHERE 大会番号=@eventNo AND 競技番号=@uid AND 組=@kumi";
 
-            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+            int uid = UIDFromPrgNo[prgNo - 1];
             using (SqlCommand myCommand = new(Query, myCon))
             {
-                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = EventNo;
                 myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
                 myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
 
@@ -819,10 +845,10 @@ namespace SeikoHelper
         {
             string Query = @"SELECT 1 FROM 記録 WHERE 大会番号=@eventNo AND 競技番号=@uid AND 組=@kumi";
 
-            int uid = GlobalV.UIDFromPrgNo[prgNo - 1];
+            int uid = UIDFromPrgNo[prgNo - 1];
             using (SqlCommand myCommand = new(Query, myCon))
             {
-                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                myCommand.Parameters.Add("@eventNo", SqlDbType.Int).Value = EventNo;
                 myCommand.Parameters.Add("@uid", SqlDbType.Int).Value = uid;
                 myCommand.Parameters.Add("@kumi", SqlDbType.Int).Value = kumi;
 
@@ -843,7 +869,7 @@ namespace SeikoHelper
         /// <param name="toKumi"></param> to kumi#
         static void MoveSwimmer(int prgNo, int kumi, int toPrgNo, int toKumi)
         {
-            int uid = GlobalV.UIDFromPrgNo[prgNo-1];
+            int uid = UIDFromPrgNo[prgNo-1];
             int[] thisSwimmerID = new int[11];
             string[] entryTime = new string[11];
             Array.Fill(entryTime, string.Empty);
@@ -861,7 +887,7 @@ namespace SeikoHelper
             int lane;
             int startLane=0;
             int maxLane = 0;
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -870,7 +896,7 @@ namespace SeikoHelper
                         order by 水路 ";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@uid", uid);
                     myCommand.Parameters.AddWithValue("@kumi", kumi);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
@@ -897,7 +923,7 @@ namespace SeikoHelper
                         }
                     }
                 }
-                uid=GlobalV.UIDFromPrgNo[toPrgNo-1];
+                uid=UIDFromPrgNo[toPrgNo-1];
                 for (lane = startLane; lane<=maxLane; lane++)   
                 {
 
@@ -916,7 +942,7 @@ namespace SeikoHelper
                     using (SqlCommand myCommand = new(myQuery, myCon))
                     {
 
-                        myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                        myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                         myCommand.Parameters.AddWithValue("@sid", thisSwimmerID[lane]);
                         myCommand.Parameters.AddWithValue("@entryTime", entryTime[lane]);
                         myCommand.Parameters.AddWithValue("@classNo", classNo[lane]);
@@ -942,7 +968,7 @@ namespace SeikoHelper
 
         static void MoveSwimmerReverse(int prgNo, int kumi, int toPrgNo, int toKumi)
         {
-            int uid = GlobalV.UIDFromPrgNo[prgNo-1];
+            int uid = UIDFromPrgNo[prgNo-1];
             int[] thisSwimmerID = new int[10];
             string[] entryTime = new string[10];
             Array.Fill(entryTime, string.Empty);
@@ -960,7 +986,7 @@ namespace SeikoHelper
             int scounter = 0;
             int startLane=0;
             int maxScounter = 0;
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = @"
@@ -969,7 +995,7 @@ namespace SeikoHelper
                         order by 水路 ";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.Parameters.AddWithValue("@uid", uid);
                     myCommand.Parameters.AddWithValue("@kumi", kumi);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
@@ -996,7 +1022,7 @@ namespace SeikoHelper
 
                 startLane++;
                 scounter = 0;
-                uid=GlobalV.UIDFromPrgNo[toPrgNo-1];
+                uid=UIDFromPrgNo[toPrgNo-1];
                 for (scounter = 0; scounter<maxScounter; scounter++)
                 {
 
@@ -1013,7 +1039,7 @@ namespace SeikoHelper
                     using (SqlCommand myCommand = new(myQuery, myCon))
                     {
 
-                        myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                        myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                         myCommand.Parameters.AddWithValue("@sid", thisSwimmerID[scounter]);
                         myCommand.Parameters.AddWithValue("@entryTime", entryTime[scounter]);
                         myCommand.Parameters.AddWithValue("@classNo", classNo[scounter]);
@@ -1036,19 +1062,19 @@ namespace SeikoHelper
 
         static int GetStartLane(int totalNum)
         {
-            if (totalNum >= GlobalV.MaxLaneNo4TimeFinal-1)
+            if (totalNum >= MaxLaneNo4TimeFinal-1)
             {
                 return 1 ;
             }
-            if (totalNum >= GlobalV.MaxLaneNo4TimeFinal-3)
+            if (totalNum >= MaxLaneNo4TimeFinal-3)
             {
                 return 2 ;
             }
-            if (totalNum >= GlobalV.MaxLaneNo4TimeFinal-5)
+            if (totalNum >= MaxLaneNo4TimeFinal-5)
             {
                 return 3 ;
             }
-            if (totalNum >= GlobalV.MaxLaneNo4TimeFinal-7)
+            if (totalNum >= MaxLaneNo4TimeFinal-7)
             {
                 return 4 ;
             }
@@ -1057,7 +1083,7 @@ namespace SeikoHelper
         }
         static void ReadProgramDB()
         {
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 InitProgramDBArray(myCon);
@@ -1068,20 +1094,20 @@ namespace SeikoHelper
                     where 大会番号= @eventNo ";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     using (SqlDataReader reader = myCommand.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             int myPrgNo = Convert.ToInt32(reader["表示用競技番号"]);
                             int myUID = Convert.ToInt32(reader["uid"]);
-                            GlobalV.PrgNobyUID[myUID-1]= myPrgNo;
-                            GlobalV.ShumokubyPrgNo[myPrgNo-1] = Convert.ToInt32(reader["種目コード"]);
-                            GlobalV.DistancebyPrgNo[myPrgNo-1] = Convert.ToInt32(reader["距離コード"]);
-                            GlobalV.UIDFromPrgNo[myPrgNo-1] = myUID;
-                            GlobalV.ClassbyPrgNo[myPrgNo-1] = Convert.ToInt32(reader["クラス番号"]);
-                            GlobalV.GenderbyPrgNo[myPrgNo-1] = Convert.ToInt32(reader["性別コード"]);
-                            GlobalV.Phase[myPrgNo-1] = Convert.ToInt32(reader["予決コード"]);
+                            PrgNobyUID[myUID-1]= myPrgNo;
+                            ShumokubyPrgNo[myPrgNo-1] = Convert.ToInt32(reader["種目コード"]);
+                            DistancebyPrgNo[myPrgNo-1] = Convert.ToInt32(reader["距離コード"]);
+                            UIDFromPrgNo[myPrgNo-1] = myUID;
+                            ClassbyPrgNo[myPrgNo-1] = Convert.ToInt32(reader["クラス番号"]);
+                            GenderbyPrgNo[myPrgNo-1] = Convert.ToInt32(reader["性別コード"]);
+                            Phase[myPrgNo-1] = Convert.ToInt32(reader["予決コード"]);
 
 
                         }
@@ -1093,13 +1119,13 @@ namespace SeikoHelper
 
         static void DeleteGoDoTable()
         {
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery = "delete from 合同レースプログラム where 大会番号=@EventNo;";
                 using (SqlCommand myCommand = new(myQuery, myCon))
                 {
-                    myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                     myCommand.ExecuteNonQuery();
                 }
             }
@@ -1107,7 +1133,7 @@ namespace SeikoHelper
 
         static void CreateGoDoTable()
         {
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery;
@@ -1123,7 +1149,7 @@ namespace SeikoHelper
                     nextKumi = kumi;
                     if (!GetNextRace(ref nextPrgNo, ref nextKumi)) return;
                     int raceNo = GetRaceNo(prgNo,kumi);
-                    int UID = GlobalV.UIDFromPrgNo[prgNo-1];
+                    int UID = UIDFromPrgNo[prgNo-1];
                     if (CanGoTogether(prgNo, kumi, nextPrgNo, nextKumi))
                     {
                         if (first)
@@ -1136,7 +1162,7 @@ namespace SeikoHelper
                                   values ( @eventNo , @tifNumber , @uid, @kumi)";
                             using (SqlCommand myCommand = new(myQuery, myCon))
                             {
-                                myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                                myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                                 myCommand.Parameters.AddWithValue("@tifNumber", tifNumber);
                                 myCommand.Parameters.AddWithValue("@uid", UID);
                                 myCommand.Parameters.AddWithValue("@kumi", kumi);
@@ -1146,11 +1172,11 @@ namespace SeikoHelper
                             myQuery = @"update 合同レースプログラム 
                                     set 競技番号" + howMany + "= @uid, 組" + howMany + @"=@kumi 
                                     where 合同レース番号=@tifNumber and 大会番号=@eventNo";
-                            UID = GlobalV.UIDFromPrgNo[nextPrgNo-1];
+                            UID = UIDFromPrgNo[nextPrgNo-1];
 
                             using (SqlCommand myCommand = new(myQuery, myCon))
                             {
-                                myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                                myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                                 myCommand.Parameters.AddWithValue("@tifNumber", tifNumber);
                                 myCommand.Parameters.AddWithValue("@uid", UID);
                                 myCommand.Parameters.AddWithValue("@kumi", nextKumi);
@@ -1163,11 +1189,11 @@ namespace SeikoHelper
                             myQuery = @"update 合同レースプログラム 
                                     set 競技番号" + howMany + "= @uid, 組" + howMany + @"=@kumi 
                                     where 合同レース番号=@tifNumber and 大会番号=@eventNo";
-                            UID = GlobalV.UIDFromPrgNo[nextPrgNo-1];
+                            UID = UIDFromPrgNo[nextPrgNo-1];
 
                             using (SqlCommand myCommand = new(myQuery, myCon))
                             {
-                                myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                                myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                                 myCommand.Parameters.AddWithValue("@tifNumber", tifNumber);
                                 myCommand.Parameters.AddWithValue("@uid", UID);
                                 myCommand.Parameters.AddWithValue("@kumi", nextKumi);
@@ -1180,10 +1206,23 @@ namespace SeikoHelper
             }
  
         }
+        static void ResizePrgArray() {
+            int raceSize = MaxPrgNo * MaxKumi;
+            Array.Resize(ref PrgNobyUID, MaxUID);
+            Array.Resize(ref ShumokubyPrgNo, MaxPrgNo);
+            Array.Resize(ref NumSwimmers, raceSize);
+            Array.Resize(ref NumSwimmersbyTID, raceSize);
+            Array.Resize(ref TIDarray, raceSize);
+            Array.Resize(ref DistancebyPrgNo, MaxPrgNo);
+            Array.Resize(ref UIDFromPrgNo, MaxPrgNo);
+            Array.Resize(ref ClassbyPrgNo, MaxPrgNo);
+            Array.Resize(ref GenderbyPrgNo, MaxPrgNo);
+            Array.Resize(ref Phase, MaxPrgNo);
+        }
         static void CreateGoDoTableObso()
         {
             DeleteGoDoTable();
-            using (SqlConnection myCon = new(GlobalV.ConnectionString))
+            using (SqlConnection myCon = new(GoDogen.ConnectionString))
             {
                 myCon.Open();
                 string myQuery;
@@ -1194,12 +1233,12 @@ namespace SeikoHelper
                 int kumi = 1;
                 do {
                     int raceNo = GetRaceNo(prgNo,kumi);
-                    int UID = GlobalV.UIDFromPrgNo[prgNo-1];
-                    if ( GlobalV.TID[raceNo]>0)
+                    int UID = UIDFromPrgNo[prgNo-1];
+                    if ( TIDarray[raceNo]>0)
                     {
-                        if ( GlobalV.TID[raceNo]>prevTif) {
+                        if ( TIDarray[raceNo]>prevTif) {
                             tifNumber++;
-                            prevTif = GlobalV.TID[raceNo];
+                            prevTif = TIDarray[raceNo];
                             howMany = 1;
                             myQuery = @"insert into 合同レースプログラム 
                                  (大会番号, 合同レース番号, 競技番号" + howMany + ", 組" +
@@ -1216,7 +1255,7 @@ namespace SeikoHelper
 
                         using (SqlCommand myCommand = new(myQuery, myCon))
                         {
-                            myCommand.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                            myCommand.Parameters.AddWithValue("@eventNo", EventNo);
                             myCommand.Parameters.AddWithValue("@tifNumber", tifNumber);
                             myCommand.Parameters.AddWithValue("@uid", UID);
                             myCommand.Parameters.AddWithValue("@kumi", kumi);
@@ -1228,5 +1267,6 @@ namespace SeikoHelper
  
 
         }
+
     }
 }

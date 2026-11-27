@@ -63,7 +63,11 @@ namespace SeikoHelper
 
             // Python プログラム
             string pythonScript = Path.Combine(
-                Application.StartupPath,
+                Environment.GetFolderPath(
+                        Environment.SpecialFolder.UserProfile
+                        ),
+                "bin",
+                "PaperSokuho",
                 "python",
                 "create_ranking4inclusive.py"
             );
@@ -87,7 +91,7 @@ namespace SeikoHelper
             };
 
             psi.ArgumentList.Add(pythonScript);
-            psi.ArgumentList.Add(GlobalV.EventNo.ToString());
+            psi.ArgumentList.Add(GlobalV.config.EventNo.ToString());
             psi.ArgumentList.Add(prgNo.ToString());
             psi.ArgumentList.Add(templateFile);
 

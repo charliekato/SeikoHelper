@@ -1,4 +1,4 @@
-﻿namespace SeikoHelper
+﻿namespace GodoCreater
 {
     partial class MainMenu
     {

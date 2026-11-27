@@ -105,10 +105,10 @@ namespace SeikoHelper
             string query = "select * from vランキング　where 大会番号=@eventNo and 順位=1";
 
 
-            using (var con = new SqlConnection(GlobalV.ConnectionString))
+            using (var con = new SqlConnection(GlobalV.config.ConnectionString))
             using (var cmd = new SqlCommand(query, con))
             {
-                cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                cmd.Parameters.AddWithValue("@eventNo", eventNo);
                 con.Open();
                 var dt = new DataTable();
                 using (var reader = cmd.ExecuteReader())
@@ -149,7 +149,7 @@ namespace SeikoHelper
                         }
                         TrySetValue(wb, rangeName + "GR", ((string)dr["新記録印刷マーク"]).Trim());
                     }
-                    TrySetValue(wb, "eventName",GlobalV.EventName+"優勝者リスト");
+                    TrySetValue(wb, "eventName",GlobalV.config.EventName+"優勝者リスト");
                     TrySetValue(wb, "eventVenue", EventVenue);
                     TrySetValue(wb, "eventDate", EventDate.Trim());
 

@@ -30,7 +30,7 @@ namespace SeikoHelper
                 if (efd.ShowDialog() == DialogResult.OK)
                 {
                     string excelFile = efd.FileName;
-                    NewRecordExporter.CompareToExcel(GlobalV.ServerName, GlobalV.EventNo, excelFile);
+                    NewRecordExporter.CompareToExcel(GlobalV.ServerName, GlobalV.config.EventNo, excelFile);
                 }
             }
         }

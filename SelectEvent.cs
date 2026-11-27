@@ -9,9 +9,33 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static SeikoHelper.SelectServer;
-
+using System.Text.Json;
 namespace SeikoHelper
 {
+    public class AppConfig
+    {
+        public string ConnectionString { get; set; } = "";
+        public string EventName { get; set; } = "";
+        public int EventNo { get; set; } = 0;
+        private static readonly string ConfigPath = Path.Combine(
+            Environment.GetFolderPath(
+                        Environment.SpecialFolder.LocalApplicationData
+                        ),
+            "SeikoHelper",
+            "common.config"
+        );
+        static public void Save(AppConfig config) {
+            Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
+            //JSONに変換して保存
+            var options = new JsonSerializerOptions {
+                WriteIndented = true
+            };
+            string json = JsonSerializer.Serialize(config, options);
+            File.WriteAllText(ConfigPath, json);
+          
+        }
+    }
+
     public partial class SelectEvent : Form
     {
         public SelectEvent()
@@ -49,7 +73,7 @@ namespace SeikoHelper
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+                using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
                 {
                     connection.Open();
                     using (SqlCommand command = new SqlCommand(sqlQuery, connection))
@@ -113,11 +137,12 @@ namespace SeikoHelper
             {
                 string title = selectedItem.ToString();
                 string[] parts = selectedItem.ToString().Split('|');
-                GlobalV.EventNo = Int32.Parse(parts[0]);
+                GlobalV.config.EventNo = Int32.Parse(parts[0]);
                 MainForm mainForm = new MainForm();
-                GlobalV.EventName = parts[1];
+                GlobalV.config.EventName = parts[1];
                 WinnerList.EventVenue= parts[2];
                 WinnerList.EventDate = parts[3];
+                AppConfig.Save(GlobalV.config);
                 mainForm.Text = title;
                 mainForm.Show();
                 //this.Hide();

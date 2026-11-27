@@ -11,7 +11,7 @@ namespace CreateEntryList
 
     public class AppConfig
     {
-        public string ConStr { get; set; }="";
+        public string ConnectionString { get; set; }="";
     }
     class Program
     {
@@ -46,13 +46,13 @@ namespace CreateEntryList
             string path = Path.Combine(
                     Environment.GetFolderPath(
                         Environment.SpecialFolder.LocalApplicationData),
-                    "SeikoHelper", "CreateEntryList.config");
+                    "SeikoHelper", "common.config");
             Console.WriteLine($"path --> {path}");
             string json = File.ReadAllText(path);
             AppConfig config = 
                 JsonSerializer.Deserialize<AppConfig>(json)
                 ?? throw new Exception("config.json の読み込みに失敗");
-            string conString = config.ConStr;
+            string conString = config.ConnectionString;
             // 保存先のフルパス（任意で変更可）
             string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string fullPath = Path.Combine(folderPath, fileName);

@@ -13,8 +13,11 @@
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <Compile Remove="CreateEntryList\**\*.cs" />
+    <Compile Remove="GoDoCreater\**\*.cs" />
     <EmbeddedResource Remove="CreateEntryList\**\*" />
+    <EmbeddedResource Remove="GoDoCreater\**\*" />
     <None Remove="CreateEntryList\**\*" />
+    <None Remove="GoDoCreater\**\*" />
   </ItemGroup>
 
 </Project>

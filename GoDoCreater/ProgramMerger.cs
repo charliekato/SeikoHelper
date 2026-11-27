@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using Microsoft.Data.SqlClient;
-using SeikoHelper;
+using GodoCreater;
 
-namespace SeikoHelper
+namespace GodoCreater
 {
     public class ProgramMerger
     {
@@ -180,7 +180,7 @@ namespace SeikoHelper
         {
 
 
-            using (SqlConnection conn = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection conn = new SqlConnection(GoDogen.ConnectionString))
             {
                 conn.Open();
 

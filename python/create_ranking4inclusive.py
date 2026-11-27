@@ -3,6 +3,7 @@
 import sys
 import os
 import pyodbc
+import json
 from openpyxl import load_workbook
 #改ページ挿入
 from openpyxl.worksheet.pagebreak import Break
@@ -18,7 +19,7 @@ lapinterval = 4
 
 # データを配置する行間隔
 rowInterval = 4
-# SQL Server 接続文字列
+# SQL Server 接続文字列 (not used )
 CONNECTION_STR = (
     "DRIVER={ODBC Driver 18 for SQL Server};"
     "SERVER=localhost;"
@@ -26,7 +27,16 @@ CONNECTION_STR = (
     "Trusted_Connection=yes;"
     "TrustServerCertificate=yes;"
 )
-
+CONFIG_FILE = os.path.join(
+        os.path.expanduser("~"),
+        "AppData",
+        "Local",
+        "SeikoHelper",
+        "create_ranking.config"
+        )
+def load_config():
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 # ===== Excel の名前付きセルを取得 =====
@@ -77,10 +87,12 @@ def cell_horizontal_alignment(ws, row, column, align="center"):
 
 def main():
 
+    config = load_config()
     # 引数取得
-    eventNo = int(sys.argv[1])
-    prgNo = int(sys.argv[2])
-    template = sys.argv[3]
+    eventNo = int(config["EventNo"])
+    prgNo = int(config["PrgNo"])
+    template = config["TemplateFile"]
+    connectionString = config["ConnectionString"]
 
     # Excel template 読み込み
     wb = load_workbook(template)
@@ -115,7 +127,7 @@ def main():
         FROM 大会設定
         WHERE 大会番号=?
     """
-    with pyodbc.connect(CONNECTION_STR) as conn:
+    with pyodbc.connect(connectionString) as conn:
         cursor = conn.cursor()
         cursor.execute(sql, eventNo)
         row = cursor.fetchone()
@@ -140,7 +152,7 @@ def main():
           AND 表示用競技番号 = ?
     """
     # SQL Server 接続
-    with pyodbc.connect(CONNECTION_STR) as conn:
+    with pyodbc.connect(connectionString) as conn:
         cursor = conn.cursor()
         cursor.execute(sql, eventNo, prgNo)
         row = cursor.fetchone()
@@ -201,7 +213,7 @@ def main():
     """
 
     # SQL Server 接続
-    with pyodbc.connect(CONNECTION_STR) as conn:
+    with pyodbc.connect(connectionString) as conn:
         cursor = conn.cursor()
         cursor.execute(sql, eventNo, prgNo)
         rows = cursor.fetchall()

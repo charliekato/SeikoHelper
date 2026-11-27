@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 namespace SeikoHelper
 {
     public partial class MainForm : Form
@@ -7,15 +8,26 @@ namespace SeikoHelper
         {
             InitializeComponent();
         }
+        string homeDir = Environment.GetFolderPath(
+                Environment.SpecialFolder.UserProfile
+        );
 
-
+       
         private void GodoCreaterClick(object sender, EventArgs e)
         {
+            string exePath = Path.Combine(
+                homeDir, "bin",
+                "GodoCreater",
+                "GodoCreater.exe"
+            );
 
-            MainMenu mainMenu = new(GlobalV.EventName);
-            mainMenu.Show();
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = exePath,
+                Arguments = $"{GlobalV.config.EventNo.ToString()} \"{GlobalV.config.EventName}\"",
+                UseShellExecute = true
+            });
         }
-
         private void lblExtractNewRecord_Click(object sender, EventArgs e)
         {
             NewRecordManager newRecordManager = new NewRecordManager();
@@ -41,14 +53,11 @@ namespace SeikoHelper
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = sfd.FileName;
-                    string homeDir = Environment.GetFolderPath(
-                                Environment.SpecialFolder.UserProfile
-                            );
                     var psi = new ProcessStartInfo 
                     {
                         FileName = Path.Combine( homeDir, "bin",
                                 "CreateEntryList", "CreateEntryList.exe" ),
-                        Arguments = $"{filePath} {(GlobalV.EventNo).ToString()} {tateFlag}",
+                        Arguments = $"{filePath} {(GlobalV.config.EventNo).ToString()} {tateFlag}",
                         UseShellExecute = false,
                         CreateNoWindow = true
                     };
@@ -103,7 +112,7 @@ namespace SeikoHelper
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = sfd.FileName;
-                    WinnerList.CreateWinnerList(GlobalV.ServerName, GlobalV.EventNo, templatePath, filePath);
+                    WinnerList.CreateWinnerList(GlobalV.ServerName, GlobalV.config.EventNo, templatePath, filePath);
                 }
             }
             finally

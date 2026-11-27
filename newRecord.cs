@@ -29,13 +29,13 @@ namespace SeikoHelper
                      Select * INTO 新記録bk 
                      From 新記録
                      Where 大会番号=@eventNo";
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(Query, connection))
                 {
                     command.CommandType = CommandType.Text;
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     command.ExecuteNonQuery();
                 }
             }
@@ -48,13 +48,13 @@ namespace SeikoHelper
         {
             string Query = @"Select TOP 1 記録名称番号 from 新記録名称
                               where 大会番号=@eventNo";
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(Query, connection))
                 {
                     command.CommandType = CommandType.Text;
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     object reader = command.ExecuteScalar();
                     if (reader != null)
                     {
@@ -78,13 +78,13 @@ namespace SeikoHelper
                        @distanceCode,@timeValue,@holderNo, @name,@shozoku,@eventName,@eventVenue 
                       )"; 
             
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
                 {
                     command.CommandType = CommandType.Text;
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     command.Parameters.AddWithValue("@gender", SqlDbType.Int).Value = genderCode;
                     command.Parameters.AddWithValue("@classNo", SqlDbType.Int).Value = classNo;
                     command.Parameters.AddWithValue("@recordNo", SqlDbType.Int).Value = tournamentRecordNo;
@@ -116,13 +116,13 @@ namespace SeikoHelper
                      ( @eventNo, @gender, @classNo, @recordNo, @strokeCode, 
                        @distanceCode,@timeValue,@hizuke,@holderNo, @name,@shozoku,@eventName,@eventVenue)"; 
             
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
                 {
                     command.CommandType = CommandType.Text;
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     command.Parameters.AddWithValue("@gender", SqlDbType.Int).Value = genderCode;
                     command.Parameters.AddWithValue("@classNo", SqlDbType.Int).Value = classNo;
                     command.Parameters.AddWithValue("@recordNo", SqlDbType.Int).Value = tournamentRecordNo;
@@ -158,13 +158,13 @@ namespace SeikoHelper
             {
                 name += "・" + swimmer2 + "・" + swimmer3 + "・" + swimmer4;
             }
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
                 {
                     command.CommandType = CommandType.Text; // これはあってもなくてもいいですが、明示的に指定することができます。
-                    command.Parameters.AddWithValue("@eventNo",  SqlDbType.Int).Value=GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo",  SqlDbType.Int).Value=GlobalV.config.EventNo;
                     command.Parameters.AddWithValue("@gender", SqlDbType.Int).Value =genderCode;
                     command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value =strokeCode;
                     command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value =distanceCode;
@@ -188,13 +188,13 @@ namespace SeikoHelper
                    and 種目コード=@strokeCode
                    and 距離コード=@distanceCode";
             string GR = "";
-            using ( SqlConnection connection=new SqlConnection(GlobalV.ConnectionString))
+            using ( SqlConnection connection=new SqlConnection(GlobalV.config.ConnectionString))
             {
 
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
                 {
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     command.Parameters.AddWithValue("@gender", SqlDbType.Int).Value = genderCode;
                     command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value = strokeCode;
                     command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value = distanceCode;
@@ -234,10 +234,10 @@ namespace SeikoHelper
             int numDifference=0;
             string query = " SELECT * from v新記録 where 大会番号=@eventNo and 記録名称='大会'";
 
-            using (var con = new SqlConnection(GlobalV.ConnectionString))
+            using (var con = new SqlConnection(GlobalV.config.ConnectionString))
             using (var cmd = new SqlCommand(query, con))
             {
-                cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                cmd.Parameters.AddWithValue("@eventNo", eventNo);
                 con.Open();
                 var dt = new DataTable();
                 using (var reader = cmd.ExecuteReader())
@@ -313,7 +313,7 @@ namespace SeikoHelper
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     string outFile = sfd.FileName;
-                    NewRecordExporter.UpdateExcel(GlobalV.ServerName, GlobalV.EventNo, outFile, templatePath);
+                    NewRecordExporter.UpdateExcel(GlobalV.ServerName, GlobalV.config.EventNo, outFile, templatePath);
                 }
             }
             catch (Exception ex)
@@ -333,10 +333,10 @@ namespace SeikoHelper
 
             string query = " SELECT * from 新記録bk where 大会番号=@eventNo";
 
-            using (var con = new SqlConnection(GlobalV.ConnectionString))
+            using (var con = new SqlConnection(GlobalV.config.ConnectionString))
             using (var cmd = new SqlCommand(query, con))
             {
-                cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                cmd.Parameters.AddWithValue("@eventNo", eventNo);
                 con.Open();
                 var dt = new DataTable();
                 using (var reader = cmd.ExecuteReader())
@@ -393,7 +393,7 @@ namespace SeikoHelper
             try
             {
 
-                using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+                using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
                 {
                     connection.Open();
                     using (SqlCommand command = new SqlCommand(query, connection))
@@ -410,12 +410,12 @@ namespace SeikoHelper
         public static void InsertGameRecord()
         {
             string query = "select * from v最速者リスト where 大会番号=@eventNo";
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -448,12 +448,12 @@ namespace SeikoHelper
         public static void UpdateGameRecord4RelayFirstSwimmer()
         {
             string query = "select * from v発生新記録 where 大会番号=@eventNo and 中間新記録マーク<>''";
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     using (SqlDataReader reader = command.ExecuteReader())
 
                     {
@@ -488,12 +488,12 @@ namespace SeikoHelper
         {
             string query = "select MAX(クラス番号) from クラス where 大会番号=@eventNo";
 
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     object reader = command.ExecuteScalar();
                     if (reader != null)
                     {
@@ -568,12 +568,12 @@ namespace SeikoHelper
         {
             string query = "select * from v発生新記録 where 大会番号=@eventNo";
             
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -612,12 +612,12 @@ namespace SeikoHelper
                                   and 種目コード=@strokeCode
                                   and 性別コード=@genderCode
                                   and 大会番号=@eventNo";
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo", SqlDbType.Int).Value = GlobalV.config.EventNo;
                     command.Parameters.AddWithValue("@genderCode", SqlDbType.Int).Value = gender;
                     command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value = distanceCode;
                     command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value = strokeCode;
@@ -643,13 +643,13 @@ namespace SeikoHelper
                        and 記録名称番号=1 
                        and 種目コード=@strokeCode
                        and 距離コード=@distanceCode";
-            using (SqlConnection connection = new SqlConnection(GlobalV.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(GlobalV.config.ConnectionString))
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(myQuery, connection))
                 {
                     command.CommandType = CommandType.Text; // これはあってもなくてもいいですが、明示的に指定することができます。
-                    command.Parameters.AddWithValue("@eventNo",  SqlDbType.Int).Value=GlobalV.EventNo;
+                    command.Parameters.AddWithValue("@eventNo",  SqlDbType.Int).Value=GlobalV.config.EventNo;
                     command.Parameters.AddWithValue("@gender", SqlDbType.Int).Value =genderCode;
                     command.Parameters.AddWithValue("@strokeCode", SqlDbType.Int).Value =strokeCode;
                     command.Parameters.AddWithValue("@distanceCode", SqlDbType.Int).Value =distanceCode;
@@ -673,11 +673,11 @@ namespace SeikoHelper
             DataTable table = new DataTable();
             try
             {
-                using (var con = new SqlConnection(GlobalV.ConnectionString))
+                using (var con = new SqlConnection(GlobalV.config.ConnectionString))
                 using (var cmd = new SqlCommand(sql, con))
                 using (var adapter = new SqlDataAdapter(cmd))
                 {
-                    cmd.Parameters.AddWithValue("@eventNo", GlobalV.EventNo);
+                    cmd.Parameters.AddWithValue("@eventNo", GlobalV.config.EventNo);
                     con.Open();
                     adapter.Fill(table);
                 }
